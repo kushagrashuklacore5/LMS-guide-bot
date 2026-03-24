@@ -1,0 +1,613 @@
+const db = require("../config/sqlite-db");
+
+/* ================= GET COURSES BY CLASSROOM ================= */
+const getCoursesByClassroom = async (req, res) => {
+  try {
+    const { classroomId } = req.query;
+    
+    console.log("GET COURSES BY CLASSROOM - Classroom ID:", classroomId);
+    
+    if (!classroomId) {
+      return res.status(400).json({ message: 'Classroom ID is required' });
+    }
+
+    db.all(`
+      SELECT 
+        c.id,
+        c.title,
+        c.description,
+        c.category,
+        c.duration,
+        c.mentorId,
+        c.classroomId,
+        c.price,
+        c.createdAt,
+        u.name as mentorName
+      FROM courses c
+      LEFT JOIN users u ON c.mentorId = u.id
+      WHERE c.classroomId = ?
+      ORDER BY c.createdAt DESC
+    `, [classroomId], (err, courses) => {
+      if (err) {
+        console.error("Database error:", err);
+        return res.status(500).json({ message: 'Database error' });
+      }
+      
+      console.log("GET COURSES BY CLASSROOM - Found courses:", courses);
+      res.json(courses || []);
+    });
+  } catch (error) {
+    console.error("GET COURSES BY CLASSROOM - Error:", error);
+    res.status(500).json({ message: 'Server error' });
+  }
+};
+
+/* ================= CREATE COURSE ================= */
+const createCourse = async (req, res) => {
+  try {
+    const { title, description, category, duration, mentorId, price, classroomId, studentIds } = req.body;
+
+    if (!title) {
+      return res.status(400).json({ message: "Course title is required" });
+    }
+
+    let assignedMentorId;
+
+    // Handle admin creation
+    if (req.user.role === "admin") {
+      if (!mentorId) {
+        return res.status(400).json({ message: "Mentor is required for admin course creation" });
+      }
+      assignedMentorId = mentorId;
+    }
+    // Handle mentor creation (class teacher)
+    else if (req.user.role === "mentor") {
+      assignedMentorId = mentorId || req.user.userId;
+    }
+    // Handle class teacher creation
+    else if (req.user.role === "teacher") {
+      if (!mentorId) {
+        return res.status(400).json({ message: "Mentor is required for teacher course creation" });
+      }
+      assignedMentorId = mentorId;
+    }
+
+    console.log("CREATE COURSE - Request:", { title, classroomId, mentorId: assignedMentorId, req: req.user });
+
+    // Create course with classroomId
+    db.run(
+      "INSERT INTO courses (title, description, category, duration, mentorId, price, classroomId) VALUES (?, ?, ?, ?, ?, ?, ?)",
+      [title, description || "", category || "", duration || 0, assignedMentorId, price || 0, classroomId || null],
+      function(err) {
+        if (err) {
+          console.error("Error creating course:", err);
+          // If classroomId column doesn't exist, try without it
+          if (err.message.includes('no such column')) {
+            db.run(
+              "INSERT INTO courses (title, description, category, duration, mentorId, price) VALUES (?, ?, ?, ?, ?, ?)",
+              [title, description || "", category || "", duration || 0, assignedMentorId, price || 0],
+              function(err) {
+                if (err) {
+                  console.error("Error creating course (retry):", err);
+                  return res.status(500).json({ message: "Error creating course" });
+                }
+                const courseId = this.lastID;
+                
+                // Assign students to course if provided or if classroom is provided
+                if (classroomId) {
+                  autoAssignStudentsFromClassroom(courseId, classroomId, () => {
+                    res.status(201).json({
+                      message: "Course created successfully",
+                      course: {
+                        id: courseId,
+                        title,
+                        description,
+                        category,
+                        duration,
+                        mentorId: assignedMentorId,
+                        price,
+                        classroomId: classroomId || null,
+                      },
+                    });
+                  });
+                } else if (studentIds && Array.isArray(studentIds) && studentIds.length > 0) {
+                  autoAssignSpecificStudents(courseId, studentIds, () => {
+                    res.status(201).json({
+                      message: "Course created successfully",
+                      course: {
+                        id: courseId,
+                        title,
+                        description,
+                        category,
+                        duration,
+                        mentorId: assignedMentorId,
+                        price,
+                        classroomId: classroomId || null,
+                      },
+                    });
+                  });
+                } else {
+                  res.status(201).json({
+                    message: "Course created successfully",
+                    course: {
+                      id: courseId,
+                      title,
+                      description,
+                      category,
+                      duration,
+                      mentorId: assignedMentorId,
+                      price,
+                      classroomId: classroomId || null,
+                    },
+                  });
+                }
+              }
+            );
+          } else {
+            return res.status(500).json({ message: "Error creating course" });
+          }
+        } else {
+          const courseId = this.lastID;
+          
+          // Assign students to course if provided or if classroom is provided
+          if (classroomId) {
+            autoAssignStudentsFromClassroom(courseId, classroomId, () => {
+              res.status(201).json({
+                message: "Course created successfully",
+                course: {
+                  id: courseId,
+                  title,
+                  description,
+                  category,
+                  duration,
+                  mentorId: assignedMentorId,
+                  price,
+                  classroomId: classroomId || null,
+                },
+              });
+            });
+          } else if (studentIds && Array.isArray(studentIds) && studentIds.length > 0) {
+            autoAssignSpecificStudents(courseId, studentIds, () => {
+              res.status(201).json({
+                message: "Course created successfully",
+                course: {
+                  id: courseId,
+                  title,
+                  description,
+                  category,
+                  duration,
+                  mentorId: assignedMentorId,
+                  price,
+                  classroomId: classroomId || null,
+                },
+              });
+            });
+          } else {
+            res.status(201).json({
+              message: "Course created successfully",
+              course: {
+                id: courseId,
+                title,
+                description,
+                category,
+                duration,
+                mentorId: assignedMentorId,
+                price,
+                classroomId: classroomId || null,
+              },
+            });
+          }
+        }
+      }
+    );
+  } catch (err) {
+    console.error("CREATE COURSE ERROR:", err);
+    res.status(500).json({ message: "Server error" });
+  }
+};
+
+/* ================= HELPER: Assign Students from Classroom ================= */
+const autoAssignStudentsFromClassroom = (courseId, classroomId, callback) => {
+  // Get all students in the classroom
+  db.all(
+    `SELECT sca.studentId 
+     FROM student_classroom_assignment sca 
+     WHERE sca.classroomId = ?`,
+    [classroomId],
+    (err, students) => {
+      if (err || !students || students.length === 0) {
+        console.log("No students found in classroom or error:", err);
+        if (callback) callback();
+        return;
+      }
+
+      // Create course_students table if it doesn't exist
+      db.run(
+        `CREATE TABLE IF NOT EXISTS course_students (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          courseId INTEGER NOT NULL,
+          studentId TEXT NOT NULL,
+          assignedAt DATETIME DEFAULT CURRENT_TIMESTAMP,
+          UNIQUE(courseId, studentId)
+        )`,
+        (err) => {
+          if (err) {
+            console.error("Error creating course_students table:", err);
+            if (callback) callback();
+            return;
+          }
+
+          // Insert students into course
+          const stmt = db.prepare(
+            `INSERT OR IGNORE INTO course_students (courseId, studentId) VALUES (?, ?)`
+          );
+
+          students.forEach((student) => {
+            stmt.run([courseId, student.studentId]);
+          });
+
+          stmt.finalize((err) => {
+            if (err) {
+              console.error("Error assigning students to course:", err);
+            } else {
+              console.log(`Successfully assigned ${students.length} students to course ${courseId}`);
+            }
+            if (callback) callback();
+          });
+        }
+      );
+    }
+  );
+};
+
+/* ================= HELPER: Assign Specific Students to Course ================= */
+const autoAssignSpecificStudents = (courseId, studentIds, callback) => {
+  // Create course_students table if it doesn't exist
+  db.run(
+    `CREATE TABLE IF NOT EXISTS course_students (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      courseId INTEGER NOT NULL,
+      studentId TEXT NOT NULL,
+      assignedAt DATETIME DEFAULT CURRENT_TIMESTAMP,
+      UNIQUE(courseId, studentId)
+    )`,
+    (err) => {
+      if (err) {
+        console.error("Error creating course_students table:", err);
+        if (callback) callback();
+        return;
+      }
+
+      // Insert students into course
+      const stmt = db.prepare(
+        `INSERT OR IGNORE INTO course_students (courseId, studentId) VALUES (?, ?)`
+      );
+
+      studentIds.forEach((studentId) => {
+        stmt.run([courseId, studentId]);
+      });
+
+      stmt.finalize((err) => {
+        if (err) {
+          console.error("Error assigning students to course:", err);
+        } else {
+          console.log(`Successfully assigned ${studentIds.length} students to course ${courseId}`);
+        }
+        if (callback) callback();
+      });
+    }
+  );
+
+/* ================= GET ALL COURSES ================= */
+const getAllCourses = async (req, res) => {
+  try {
+    // Get courses with mentor information
+    db.all(`
+      SELECT c.id, c.title, c.description, c.category, c.duration, c.price, c.createdAt,
+             u.name as mentorName, u.email as mentorEmail
+      FROM courses c
+      LEFT JOIN users u ON c.mentorId = u.id
+      ORDER BY c.createdAt DESC
+    `, (err, courses) => {
+      if (err) {
+        console.error("Database error:", err);
+        return res.status(500).json({ message: "Database error" });
+      }
+
+      res.json(courses);
+    });
+  } catch (err) {
+    console.error("GET ALL COURSES ERROR:", err);
+    res.status(500).json({ message: "Server error" });
+  }
+};
+
+/* ================= GET COURSES BY MENTOR ================= */
+const getCoursesByMentor = async (req, res) => {
+  try {
+    const mentorId = req.user.userId;
+
+    db.all(`
+      SELECT c.id, c.title, c.description, c.category, c.duration, c.price, c.createdAt,
+             (SELECT COUNT(*) FROM course_students cs WHERE cs.courseId = c.id) as studentCount
+      FROM courses c 
+      WHERE c.mentorId = ?
+      ORDER BY c.createdAt DESC
+    `, [mentorId], (err, courses) => {
+      if (err) {
+        console.error("Database error:", err);
+        return res.status(500).json({ message: 'Database error' });
+      }
+
+      res.json(courses);
+    });
+  } catch (err) {
+    console.error("GET COURSES BY MENTOR ERROR:", err);
+    res.status(500).json({ message: "Server error" });
+  }
+};
+
+/* ================= GET COURSE BY ID ================= */
+const getCourseById = async (req, res) => {
+  try {
+    const courseId = req.params.id;
+
+    db.get(`
+      SELECT c.id, c.title, c.description, c.category, c.duration, c.price, c.createdAt,
+             u.name as mentorName, u.email as mentorEmail
+      FROM courses c
+      LEFT JOIN users u ON c.mentorId = u.id
+      WHERE c.id = ?
+    `, [courseId], (err, course) => {
+      if (err) {
+        console.error("Database error:", err);
+        return res.status(500).json({ message: 'Database error' });
+      }
+
+      if (!course) {
+        return res.status(404).json({ message: 'Course not found' });
+      }
+
+      // Get assigned students for this course
+      db.all(`
+        SELECT u.id, u.name, u.email
+        FROM users u
+        INNER JOIN course_students cs ON u.id = cs.studentId
+        WHERE cs.courseId = ?
+      `, [courseId], (err, students) => {
+        if (err) {
+          console.error("Error fetching students:", err);
+          return res.status(500).json({ message: 'Database error' });
+        }
+
+        // Add students to course object
+        course.students = students;
+        res.json(course);
+      });
+    });
+  } catch (err) {
+    console.error("GET COURSE BY ID ERROR:", err);
+    res.status(500).json({ message: "Server error" });
+  }
+};
+
+/* ================= UPDATE COURSE ================= */
+const updateCourse = async (req, res) => {
+  try {
+    const courseId = req.params.id;
+    const { title, description, category, duration, price } = req.body;
+
+    // Check if course exists and user has permission
+    db.get("SELECT * FROM courses WHERE id = ?", [courseId], (err, course) => {
+      if (err) {
+        console.error("Database error:", err);
+        return res.status(500).json({ message: "Database error" });
+      }
+
+      if (!course) {
+        return res.status(404).json({ message: "Course not found" });
+      }
+
+      // Check permissions
+      if (req.user.role !== "admin" && course.mentorId !== req.user.userId) {
+        return res.status(403).json({ message: "Access denied" });
+      }
+
+      // Update course
+      db.run(
+        "UPDATE courses SET title = ?, description = ?, category = ?, duration = ?, price = ? WHERE id = ?",
+        [title || course.title, description || course.description, category || course.category, duration || course.duration, price || course.price, courseId],
+        function(err) {
+          if (err) {
+            console.error("Error updating course:", err);
+            return res.status(500).json({ message: "Error updating course" });
+          }
+
+          res.json({
+            message: "Course updated successfully",
+            course: {
+              id: courseId,
+              title: title || course.title,
+              description: description || course.description,
+              category: category || course.category,
+              duration: duration || course.duration,
+              price: price || course.price,
+            },
+          });
+        }
+      );
+    });
+  } catch (err) {
+    console.error("UPDATE COURSE ERROR:", err);
+    res.status(500).json({ message: "Server error" });
+  }
+};
+
+/* ================= DELETE COURSE ================= */
+const deleteCourse = async (req, res) => {
+  try {
+    const courseId = req.params.id;
+
+    // Check if course exists and user has permission
+    db.get("SELECT * FROM courses WHERE id = ?", [courseId], (err, course) => {
+      if (err) {
+        console.error("Database error:", err);
+        return res.status(500).json({ message: "Database error" });
+      }
+
+      if (!course) {
+        return res.status(404).json({ message: "Course not found" });
+      }
+
+      // Check permissions
+      if (req.user.role !== "admin" && course.mentorId !== req.user.userId) {
+        return res.status(403).json({ message: "Access denied" });
+      }
+
+      // Delete course
+      db.run("DELETE FROM courses WHERE id = ?", [courseId], function(err) {
+        if (err) {
+          console.error("Error deleting course:", err);
+          return res.status(500).json({ message: "Error deleting course" });
+        }
+
+        res.json({
+          message: "Course deleted successfully",
+        });
+      });
+    });
+  } catch (err) {
+    console.error("DELETE COURSE ERROR:", err);
+    res.status(500).json({ message: "Server error" });
+  }
+};
+
+/* ================= GET COURSES BY STUDENT ================= */
+const getCoursesByStudent = async (req, res) => {
+  try {
+    const studentId = req.user.userId;
+
+    db.all(`
+      SELECT c.id, c.title, c.description, c.category, c.duration, c.price, c.createdAt,
+             u.name as mentorName, u.email as mentorEmail
+      FROM courses c
+      LEFT JOIN users u ON c.mentorId = u.id
+      INNER JOIN course_students cs ON c.id = cs.courseId
+      WHERE cs.studentId = ?
+      ORDER BY c.createdAt DESC
+    `, [studentId], (err, courses) => {
+      if (err) {
+        console.error("Database error:", err);
+        return res.status(500).json({ message: 'Database error' });
+      }
+
+      res.json(courses);
+    });
+  } catch (err) {
+    console.error("GET COURSES BY STUDENT ERROR:", err);
+    res.status(500).json({ message: "Server error" });
+  }
+};
+
+/* ================= ASSIGN STUDENTS TO COURSE ================= */
+const assignStudentsToCourse = async (req, res) => {
+  try {
+    const courseId = req.params.courseId;
+    const { studentIds } = req.body;
+
+    if (!courseId || !Array.isArray(studentIds)) {
+      return res.status(400).json({ message: "Invalid course ID or student IDs" });
+    }
+
+    // Check if course exists and user is the course teacher
+    db.get("SELECT * FROM courses WHERE id = ?", [courseId], (err, course) => {
+      if (err) {
+        console.error("Database error:", err);
+        return res.status(500).json({ message: "Database error" });
+      }
+
+      if (!course) {
+        return res.status(404).json({ message: "Course not found" });
+      }
+
+      // Check if user is the course teacher
+      if (course.mentorId !== req.user.userId && req.user.role !== "admin") {
+        return res.status(403).json({ message: "Not authorized to assign students to this course" });
+      }
+
+      // For each student, create/update a record linking them to the course
+      // Using a simpler approach: store in a course_students table or update user.assignedCourses
+      
+      const values = studentIds.map(studentId => [courseId, studentId]);
+      
+      // Delete existing assignments first
+      db.run("DELETE FROM course_students WHERE courseId = ?", [courseId], (deleteErr) => {
+        if (deleteErr && deleteErr.message.includes("no such table")) {
+          // Table doesn't exist, create it
+          db.run(`
+            CREATE TABLE IF NOT EXISTS course_students (
+              id INTEGER PRIMARY KEY AUTOINCREMENT,
+              courseId INTEGER NOT NULL,
+              studentId INTEGER NOT NULL,
+              createdAt DATETIME DEFAULT CURRENT_TIMESTAMP,
+              UNIQUE(courseId, studentId),
+              FOREIGN KEY(courseId) REFERENCES courses(id),
+              FOREIGN KEY(studentId) REFERENCES users(id)
+            )
+          `, (createErr) => {
+            if (createErr) {
+              console.error("Error creating table:", createErr);
+              return res.status(500).json({ message: "Server error" });
+            }
+            insertStudents();
+          });
+        } else if (deleteErr) {
+          console.error("Error deleting students:", deleteErr);
+          return res.status(500).json({ message: "Server error" });
+        } else {
+          insertStudents();
+        }
+      });
+
+      function insertStudents() {
+        if (values.length === 0) {
+          return res.json({ message: "No students to assign" });
+        }
+
+        const placeholders = values.map(() => "(?, ?)").join(",");
+        const flatValues = values.flat();
+
+        db.run(
+          `INSERT INTO course_students (courseId, studentId) VALUES ${placeholders}`,
+          flatValues,
+          (insertErr) => {
+            if (insertErr) {
+              console.error("Error assigning students:", insertErr);
+              return res.status(500).json({ message: "Error assigning students" });
+            }
+
+            res.json({
+              message: "Students assigned successfully",
+              count: studentIds.length
+            });
+          }
+        );
+      }
+    });
+  } catch (err) {
+    console.error("ASSIGN STUDENTS ERROR:", err);
+    res.status(500).json({ message: "Server error" });
+  }
+};
+
+module.exports = {
+  getAllCourses,
+  createCourse,
+  getCoursesByMentor,
+  getCoursesByStudent,
+  getCourseById,
+  updateCourse,
+  deleteCourse,
+  getCoursesByClassroom,
+  assignStudentsToCourse
+};
