@@ -6,6 +6,7 @@ const fs = require('fs');
 const translationService = require('../services/translationService');
 const authMiddleware = require('../middleware/authMiddleware');
 const { checkExportAccess } = require('../middleware/quotaMiddleware');
+const { rateLimiters } = require('../middleware/rateLimiter');
 
 // Hardcoded Arabic translations for common field names
 const arabicTranslations = {
@@ -58,7 +59,7 @@ function getArabicFieldName(fieldName) {
 }
 
 // Get all tables in the database
-router.get('/tables', authMiddleware, checkExportAccess, async (req, res) => {
+router.get('/tables', rateLimiters.sensitive, authMiddleware, checkExportAccess, async (req, res) => {
   try {
     db.all("SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%'", (err, tables) => {
       if (err) {
@@ -74,7 +75,7 @@ router.get('/tables', authMiddleware, checkExportAccess, async (req, res) => {
 });
 
 // Get table structure
-router.get('/table/:tableName/structure', authMiddleware, checkExportAccess, async (req, res) => {
+router.get('/table/:tableName/structure', rateLimiters.sensitive, authMiddleware, checkExportAccess, async (req, res) => {
   try {
     const { tableName } = req.params;
     
@@ -96,7 +97,7 @@ router.get('/table/:tableName/structure', authMiddleware, checkExportAccess, asy
 });
 
 // Get table data
-router.get('/table/:tableName/data', authMiddleware, checkExportAccess, async (req, res) => {
+router.get('/table/:tableName/data', rateLimiters.sensitive, authMiddleware, checkExportAccess, async (req, res) => {
   try {
     const { tableName } = req.params;
     const { limit = 10000, offset = 0 } = req.query;
@@ -132,7 +133,7 @@ router.get('/table/:tableName/data', authMiddleware, checkExportAccess, async (r
 });
 
 // Export table as Excel (CSV format - Excel compatible)
-router.get('/table/:tableName/excel', authMiddleware, checkExportAccess, async (req, res) => {
+router.get('/table/:tableName/excel', rateLimiters.sensitive, authMiddleware, checkExportAccess, async (req, res) => {
   try {
     const { tableName } = req.params;
     const lang = (req.query.lang || 'en').toLowerCase();
@@ -278,7 +279,7 @@ router.get('/table/:tableName/excel', authMiddleware, checkExportAccess, async (
 });
 
 // Export entire database as Excel (multiple sheets in separate files)
-router.get('/database/excel', authMiddleware, checkExportAccess, async (req, res) => {
+router.get('/database/excel', rateLimiters.sensitive, authMiddleware, checkExportAccess, async (req, res) => {
   try {
     const lang = (req.query.lang || 'en').toLowerCase();
     // Get all tables
@@ -468,7 +469,7 @@ router.get('/database/excel', authMiddleware, checkExportAccess, async (req, res
 });
 
 // Get database statistics
-router.get('/stats', authMiddleware, checkExportAccess, async (req, res) => {
+router.get('/stats', rateLimiters.sensitive, authMiddleware, checkExportAccess, async (req, res) => {
   try {
     db.all("SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%'", (err, tables) => {
       if (err) {

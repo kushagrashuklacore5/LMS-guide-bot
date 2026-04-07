@@ -2,7 +2,7 @@ import ClassroomDetails from "./pages/admin/ClassroomDetails";
 
 import { Routes, Route, Navigate, useLocation } from "react-router-dom";
 
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 
 import { useTranslation } from './context/TranslationContext';
 
@@ -14,9 +14,13 @@ import SuperAdminDashboard from "./pages/superadmin/SuperAdminDashboard";
 
 import SuperAdminSubscription from "./pages/superadmin/SuperAdminSubscription";
 
+import InternalAdminPortal from "./pages/internal/InternalAdminPortal";
+
 import { ToastContainer } from "react-toastify";
 
 import DatabaseExport from "./pages/admin/DatabaseExport";
+
+import ControlledTermsModal from "./components/ControlledTermsModal";
 
 import "react-toastify/dist/ReactToastify.css";
 
@@ -243,7 +247,42 @@ function App() {
 
   const { currentLanguage } = useTranslation();
 
+  const { user, token } = useAuth();
 
+  const [showTermsModal, setShowTermsModal] = useState(false);
+
+  // Check if user is authenticated
+  const isAuthenticated = !!(token && user);
+
+  console.log('🏠 App render:', { location: location.pathname, isAuthenticated, user });
+
+  // Check if current route is a public/auth page that should allow scrolling
+
+  const isAuthPage = ['/login', '/register', '/home', '/'].includes(location.pathname);
+
+  // Check if user needs to accept terms (after login but before accessing any protected route)
+  
+  useEffect(() => {
+    
+    console.log('🔍 Terms Check:', { isAuthenticated, isAuthPage, userId: user?.id, location: location.pathname });
+    
+    // Show terms modal immediately after login when user is authenticated and not on auth pages
+    if (isAuthenticated === true && user?.id && !isAuthPage) {
+      
+      const hasAcceptedTerms = localStorage.getItem(`terms_accepted_${user?.id}`);
+      
+      console.log('📋 Terms Status:', { hasAcceptedTerms, showTermsModal });
+      
+      if (!hasAcceptedTerms && !showTermsModal) {
+        
+        console.log('⚠️ Showing terms modal');
+        setShowTermsModal(true);
+        
+      }
+      
+    }
+    
+  }, [token, user?.id, isAuthPage, location.pathname]);
 
   // Translation state management is handled by TranslationContext
 
@@ -275,47 +314,76 @@ function App() {
 
   }, [currentLanguage]);
 
+  const handleTermsAccept = () => {
 
+    localStorage.setItem(`terms_accepted_${user?.id}`, 'true');
+
+    setShowTermsModal(false);
+
+  };
+
+  // Test function to manually trigger modal
+  const testShowModal = () => {
+    console.log('🧪 Test: Manually showing modal');
+    setShowTermsModal(true);
+  };
+
+  // Clear terms acceptance for testing
+  const clearTermsAcceptance = () => {
+    if (user?.id) {
+      localStorage.removeItem(`terms_accepted_${user?.id}`);
+      console.log('🗑️ Cleared terms acceptance for user:', user?.id);
+      setShowTermsModal(false); // Reset to false first
+      setTimeout(() => setShowTermsModal(true), 100); // Then show modal
+    }
+  };
 
   return (
+    <>
+      <div className={isAuthPage ? "min-h-screen" : "h-screen w-screen overflow-hidden"}>
+        <ToastContainer 
+          position="top-right" 
+          autoClose={5000}
+          hideProgressBar={false}
+          newestOnTop={false}
+          closeOnClick
+          rtl={false}
+          pauseOnFocusLoss
+          draggable
+          pauseOnHover
+          theme="light"
+        />
 
-    <div>
+        <Routes>
 
-      <ToastContainer 
+          {/* ===== PUBLIC ===== */}
 
-        position="top-right" 
+          <Route path="/" element={<RootRedirect />} />
 
-        autoClose={5000}
+          <Route path="/home" element={<Home />} />
 
-        hideProgressBar={false}
+          <Route path="/login" element={<Login />} />
 
-        newestOnTop={false}
+          <Route path="/register" element={<Register />} />
 
-        closeOnClick
-
-        rtl={false}
-
-        pauseOnFocusLoss
-
-        draggable
-
-        pauseOnHover
-
-        theme="light"
-
-      />
-
-      <Routes>
-
-        {/* ===== PUBLIC ===== */}
-
-        <Route path="/" element={<RootRedirect />} />
-
-        <Route path="/home" element={<Home />} />
-
-        <Route path="/login" element={<Login />} />
-
-        <Route path="/register" element={<Register />} />
+          {/* Test button for terms modal */}
+          <Route path="/test-terms" element={
+            <div style={{padding: '50px', textAlign: 'center'}}>
+              <h1>Terms Modal Test</h1>
+              <button 
+                onClick={testShowModal}
+                style={{padding: '10px 20px', backgroundColor: 'blue', color: 'white', border: 'none', borderRadius: '5px', cursor: 'pointer', margin: '10px'}}
+              >
+                Test Terms Modal
+              </button>
+              <button 
+                onClick={clearTermsAcceptance}
+                style={{padding: '10px 20px', backgroundColor: 'red', color: 'white', border: 'none', borderRadius: '5px', cursor: 'pointer', margin: '10px'}}
+              >
+                Clear Terms & Show
+              </button>
+            </div>
+          } />
 
 
 
@@ -1199,6 +1267,9 @@ function App() {
 
           <Route path="/superadmin/subscription" element={<SuperAdminSubscription />} />
 
+          {/* ===== INTERNAL ADMIN PORTAL ===== */}
+          <Route path="/internal-admin-portal" element={<InternalAdminPortal />} />
+
 
 
           <Route
@@ -1385,8 +1456,14 @@ function App() {
 
         </Routes>
 
-    </div>
+      </div>
 
+      {/* Terms and Conditions Modal */}
+      <ControlledTermsModal 
+        isOpen={showTermsModal} 
+        onAccept={handleTermsAccept}
+      />
+    </>
   );
 
 }

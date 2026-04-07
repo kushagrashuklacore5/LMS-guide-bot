@@ -18,7 +18,8 @@ import { useAuth } from "../auth/auth";
 import QuotaLimitModal from './QuotaLimitModal';
 import { useTranslation } from "../context/TranslationContext";
 import AnnouncementBell from "./AnnouncementBell";
-import core5Logo from '../../../core5 logo with hat.png';
+import LoginFooter from './LoginFooter';
+import whiteLogo from '../../../White Logo.png';
 
 const MentorLayout = ({ children }) => {
   const location = useLocation();
@@ -60,7 +61,7 @@ const MentorLayout = ({ children }) => {
           return;
         }
 
-        const res = await fetch(`${API}/subscriptions/check-feature-access`, {
+        const res = await fetch(`${API}/api/subscriptions/check-feature-access`, {
           headers: { Authorization: `Bearer ${token}` }
         });
 
@@ -137,11 +138,11 @@ const MentorLayout = ({ children }) => {
       : t("nav_dashboard");
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="h-screen bg-background overflow-hidden">
       {/* ================= DESKTOP SIDEBAR ================= */}
       <aside
         className={`
-          fixed top-0 left-0 h-screen z-40 hidden lg:block
+          fixed top-0 left-0 h-full z-40 hidden lg:block
           transition-all duration-300
           ${sidebarCollapsed ? "w-20" : "w-64"}
           bg-gradient-to-b from-blue-700 via-indigo-700 to-cyan-700
@@ -154,16 +155,16 @@ const MentorLayout = ({ children }) => {
           <div className="h-24 sm:h-28 border-b border-white/20 flex items-center justify-center">
             {!sidebarCollapsed && (
               <img
-                src={core5Logo}
+                src={whiteLogo}
                 alt="Core5 Academy"
                 className="max-h-full w-auto object-contain"
               />
             )}
             {sidebarCollapsed && (
               <img
-                src={core5Logo}
+                src={whiteLogo}
                 alt="Core5 Academy"
-                className="h-12 w-auto object-contain"
+                className="h-16 w-auto object-contain"
               />
             )}
           </div>
@@ -239,8 +240,8 @@ const MentorLayout = ({ children }) => {
 
       {/* ================= MAIN CONTENT ================= */}
       <main
-        className={`transition-all duration-300 ${sidebarCollapsed ? "lg:ml-20" : "lg:ml-64"
-          }`}
+        className={`transition-all duration-300 flex-1 overflow-hidden ${sidebarCollapsed ? "lg:ml-20" : "lg:ml-64"
+          } h-screen flex flex-col`}
       >
         {/* ===== TOP BAR ===== */}
         <header className="sticky top-0 z-30 bg-white border-b px-4 py-3">
@@ -255,8 +256,11 @@ const MentorLayout = ({ children }) => {
         </header>
 
         {/* ===== CONTENT ===== */}
-        <div className="p-4 md:p-6">{children}</div>
+        <div className="flex-1 overflow-y-auto p-4 md:p-6">{children}</div>
       </main>
+      
+      {/* Footer */}
+      <LoginFooter />
 
       {/* ================= QUOTA MODAL (OVERLAY) ================= */}
       <QuotaLimitModal isOpen={showQuotaModal} onClose={() => setShowQuotaModal(false)} quotaDetails={quotaDetails} />

@@ -24,7 +24,7 @@ export function generateInvoicePdf(payload: {
 
   // Try to load and add logo image - enlarged and centered
   try {
-    const logoPath = '/core5 logo with hat.png';
+    const logoPath = '/White Logo.png';
     doc.addImage(logoPath, "PNG", 70, 5, 70, 60);
   } catch (e) {
     console.log('Logo image not available');

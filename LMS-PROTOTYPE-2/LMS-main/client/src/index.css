@@ -2,6 +2,24 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Global viewport fixes */
+html, body {
+  height: 100%;
+  overflow-x: hidden;
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+html::-webkit-scrollbar, 
+body::-webkit-scrollbar {
+  display: none;
+}
+
+#root {
+  height: 100vh;
+  overflow-x: hidden;
+}
+
 /* RTL Support for Arabic */
 [dir="rtl"] {
   direction: rtl;

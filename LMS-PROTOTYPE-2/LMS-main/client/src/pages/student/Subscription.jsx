@@ -18,7 +18,7 @@ const Subscription = () => {
   useEffect(() => {
     const fetchSubscription = async () => {
       try {
-        const response = await fetch(`${API_BASE}/subscriptions/current`, {
+        const response = await fetch(`${API_BASE}/api/subscriptions/current`, {
           method: 'GET',
           headers: {
             'Content-Type': 'application/json',
@@ -64,7 +64,7 @@ const Subscription = () => {
     
     try {
       setCancelling(true);
-      const response = await fetch(`${API_BASE}/subscriptions/cancel`, {
+      const response = await fetch(`${API_BASE}/api/subscriptions/cancel`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -226,7 +226,7 @@ const Subscription = () => {
             onClick={async () => {
               // Simulate upgrading to standard plan for testing
               try {
-                const response = await fetch(`${API_BASE}/subscriptions/test-upgrade`, {
+                const response = await fetch(`${API_BASE}/api/subscriptions/test-upgrade`, {
                   method: 'POST',
                   headers: {
                     'Content-Type': 'application/json',

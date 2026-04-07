@@ -3,7 +3,7 @@ import { Link, useLocation, useNavigate } from "react-router-dom";
 import { CreditCard, History, Package, LayoutDashboard, Database, LogOut, ChevronLeft, ChevronRight } from 'lucide-react';
 import { useAuth } from "../auth/auth";
 import { useTranslation } from "../context/TranslationContext";
-import core5Logo from '../../../core5 logo with hat.png';
+import whiteLogo from '../../../White Logo.png';
 
 const items = [
   { name: "Fees Collection", icon: CreditCard },
@@ -28,9 +28,9 @@ export default function Sidebar() {
     <aside className={`sticky top-0 h-screen flex-shrink-0 text-white shadow-lg flex flex-col transition-all duration-300 ${sidebarCollapsed ? 'w-20' : 'w-64'} bg-gradient-to-b from-slate-900 via-slate-800 to-slate-900`}>
       <div className="h-24 sm:h-28 border-b border-white/10 flex items-center justify-center">
         {!sidebarCollapsed ? (
-          <img src={core5Logo} alt="Core5 Academy" className="max-h-full w-auto object-contain" />
+          <img src={whiteLogo} alt="Core5 Academy" className="max-h-full w-auto object-contain" />
         ) : (
-          <img src={core5Logo} alt="Core5 Academy" className="h-12 w-auto object-contain" />
+          <img src={whiteLogo} alt="Core5 Academy" className="h-16 w-auto object-contain" />
         )}
       </div>
 

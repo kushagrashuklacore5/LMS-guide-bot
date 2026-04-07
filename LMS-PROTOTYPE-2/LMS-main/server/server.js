@@ -6,6 +6,14 @@ const http = require("http");
 const { Server } = require("socket.io");
 const fs = require("fs");
 
+// Import security middleware
+const { securityMiddleware } = require('./middleware/security');
+console.log('🛡️ Security middleware loaded with Helmet');
+
+// Import rate limiting middleware
+const { rateLimiters } = require('./middleware/rateLimiter');
+console.log('✅ Rate limiting middleware loaded (50 requests per minute)');
+
 // Import subscription scheduler for automated expiration
 require('./schedulers/subscription-scheduler');
 console.log('📅 Checking for expired subscriptions at 16/3/2026, 11:43:10 am');
@@ -21,6 +29,23 @@ if (fs.existsSync(path.join(__dirname, '.env'))) {
 }
 
 const app = express();
+
+// Apply security middleware globally (after app creation, before other middleware)
+app.use(securityMiddleware);
+
+// Apply rate limiting to test endpoint
+app.get('/api/test-rate-limit', rateLimiters.general, (req, res) => {
+  res.json({
+    success: true,
+    message: 'Rate limiting test endpoint',
+    timestamp: new Date().toISOString(),
+    rateLimitInfo: {
+      limit: 50,
+      windowMs: 60000,
+      message: '50 requests per minute allowed'
+    }
+  });
+});
 
 // Set timeout configurations for stability
 app.use((req, res, next) => {
@@ -171,6 +196,7 @@ app.get("/health", (req, res) => {
 
 /* Auth & Users */
 app.use("/api/auth", require("./routes/auth-routes"));
+app.use("/api/password-reset", require("./routes/passwordResetRoutes"));
 app.use("/api/users", require("./routes/user-routes"));
 app.use("/api/superadmin", require("./routes/superadminRoutes"));
 app.use("/api/student", require("./routes/student-routes"));

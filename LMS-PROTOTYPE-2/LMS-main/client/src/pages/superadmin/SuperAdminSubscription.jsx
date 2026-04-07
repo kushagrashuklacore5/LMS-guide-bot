@@ -67,7 +67,7 @@ const API_BASE = import.meta.env.VITE_BACKEND_URL || 'http://localhost:5002';
     
     try {
       setLoading(true);
-      const response = await fetch(`${API_BASE}/subscriptions/cancel`, {
+      const response = await fetch(`${API_BASE}/api/subscriptions/cancel`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -101,7 +101,7 @@ const API_BASE = import.meta.env.VITE_BACKEND_URL || 'http://localhost:5002';
   useEffect(() => {
     const fetchCurrentSubscription = async () => {
       try {
-        const response = await fetch(`${API_BASE}/subscriptions/current`, {
+        const response = await fetch(`${API_BASE}/api/subscriptions/current`, {
           method: 'GET',
           headers: {
             'Content-Type': 'application/json',
@@ -135,7 +135,7 @@ const API_BASE = import.meta.env.VITE_BACKEND_URL || 'http://localhost:5002';
 
   const activateFreeTrial = async () => {
     try {
-      const response = await fetch(`${API_BASE}/subscriptions/activate-free-trial`, {
+      const response = await fetch(`${API_BASE}/api/subscriptions/activate-free-trial`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -163,7 +163,7 @@ const API_BASE = import.meta.env.VITE_BACKEND_URL || 'http://localhost:5002';
     
     try {
       // Create subscription order
-      const orderResponse = await fetch(`${API_BASE}/subscriptions/create-order`, {
+      const orderResponse = await fetch(`${API_BASE}/api/subscriptions/create-order`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -303,7 +303,7 @@ const API_BASE = import.meta.env.VITE_BACKEND_URL || 'http://localhost:5002';
       setLoading(true)
       
       // Verify payment on backend
-      const verifyResponse = await fetch(`${API_BASE}/subscriptions/verify-payment`, {
+      const verifyResponse = await fetch(`${API_BASE}/api/subscriptions/verify-payment`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

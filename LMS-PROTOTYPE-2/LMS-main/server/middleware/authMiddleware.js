@@ -35,10 +35,11 @@ module.exports = (req, res, next) => {
             req.user = {
               userId: decoded.userId,
               role: decoded.role,
+              email: decoded.email, // Add email field
               name: decoded.name || "",
               universityId: decoded.universityId || decoded.university_id || 1
             };
-            console.log("Auth - Token verified, userId:", req.user.userId, "role:", req.user.role, "universityId:", req.user.universityId);
+            console.log("Auth - Token verified, userId:", req.user.userId, "role:", req.user.role, "email:", req.user.email, "universityId:", req.user.universityId);
             return next();
           } catch (tokenError) {
             console.log("Auth - Invalid token:", tokenError.message);

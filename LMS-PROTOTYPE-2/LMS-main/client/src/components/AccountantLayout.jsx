@@ -18,7 +18,8 @@ import { useAuth } from '../auth/auth';
 import { useTranslation } from '../context/TranslationContext';
 import AnnouncementBell from './AnnouncementBell';
 import QuotaLimitModal from './QuotaLimitModal';
-import core5Logo from '../../../core5 logo with hat.png';
+import LoginFooter from './LoginFooter';
+import whiteLogo from '../../../White Logo.png';
 
 const AccountantLayout = ({ children }) => {
   const location = useLocation();
@@ -59,7 +60,7 @@ const AccountantLayout = ({ children }) => {
           return;
         }
 
-        const res = await fetch(`${API}/subscriptions/check-feature-access`, {
+        const res = await fetch(`${API}/api/subscriptions/check-feature-access`, {
           headers: { Authorization: `Bearer ${token}` },
         });
 
@@ -125,11 +126,11 @@ const AccountantLayout = ({ children }) => {
       : t('nav_dashboard');
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="h-screen bg-background overflow-hidden">
       {/* ================= DESKTOP SIDEBAR ================= */}
       <aside
         className={`
-          fixed top-0 left-0 h-screen z-40 hidden lg:block
+          fixed top-0 left-0 h-full z-40 hidden lg:block
           transition-all duration-300
           ${sidebarCollapsed ? 'w-20' : 'w-64'}
           bg-gradient-to-b from-emerald-700 via-emerald-700 to-teal-700
@@ -141,16 +142,17 @@ const AccountantLayout = ({ children }) => {
           <div className="h-24 sm:h-28 border-b border-white/20 flex items-center justify-center">
             {!sidebarCollapsed && (
               <img
-                src={core5Logo}
+                src={whiteLogo}
                 alt="Core5 Academy"
                 className="max-h-full w-auto object-contain"
               />
             )}
             {sidebarCollapsed && (
               <img
-                src={core5Logo}
+              
+                src={whiteLogo}
                 alt="Core5 Academy"
-                className="h-12 w-auto object-contain"
+                className="h-16 w-auto object-contain"
               />
             )}
           </div>
@@ -231,7 +233,7 @@ const AccountantLayout = ({ children }) => {
       >
         <div className="flex flex-col h-full backdrop-blur-xl bg-white/5 p-4">
           <div className="flex justify-between items-center mb-6">
-            <img src={core5Logo} alt="Core5 Academy" className="h-12" />
+            <img src={whiteLogo} alt="Core5 Academy" className="h-16" />
           </div>
 
           <nav className="flex-1 space-y-2">
@@ -263,9 +265,11 @@ const AccountantLayout = ({ children }) => {
 
       {/* ================= MAIN CONTENT ================= */}
       <main
-        className={`transition-all duration-300 ${
-          sidebarCollapsed ? 'lg:ml-20' : 'lg:ml-64'
-        } min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900`}
+        className={`
+          transition-all duration-300 flex-1 overflow-hidden
+          ${sidebarCollapsed ? 'lg:ml-20' : 'lg:ml-64'}
+          h-full bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900
+        `}
       >
         {/* ================= HEADER ================= */}
         <header className="sticky top-0 z-20 bg-slate-800/50 backdrop-blur-md border-b border-slate-700/50">
@@ -290,8 +294,11 @@ const AccountantLayout = ({ children }) => {
         </header>
 
         {/* ================= PAGE CONTENT ================= */}
-        <div className="p-4 sm:p-6 lg:p-8">{children}</div>
+        <div className="h-[calc(100%-5rem)] overflow-y-auto p-4 sm:p-6 lg:p-8">{children}</div>
       </main>
+      
+      {/* Footer */}
+      <LoginFooter />
 
       {/* ================= QUOTA LIMIT MODAL ================= */}
       {showQuotaModal && (

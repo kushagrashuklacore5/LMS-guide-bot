@@ -159,7 +159,7 @@ exports.generateInvoice = (req, res) => {
   // Load logo as base64
   let logoBase64 = '';
   try {
-    const logoPath = path.join(__dirname, '../../core5 logo with hat.png');
+    const logoPath = path.join(__dirname, '../../White Logo.png');
     const logoBuffer = fs.readFileSync(logoPath);
     logoBase64 = logoBuffer.toString('base64');
   } catch (logoError) {

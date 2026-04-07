@@ -91,7 +91,8 @@ exports.login = async (req, res) => {
         "admin@gmail.com": "admin",
         "accountant@demo.com": "accountant",
         "storekeeper@demo.com": "storekeeper",
-        "superadmin@core5.com": "superadmin"
+        "superadmin@core5.com": "superadmin",
+        "portal@core5.co.in": "superadmin"
       };
 
       if (!user && demoUsers[normalizedEmail]) {

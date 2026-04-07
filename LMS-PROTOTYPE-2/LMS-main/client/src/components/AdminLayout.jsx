@@ -18,7 +18,8 @@ import QuotaLimitModal from './QuotaLimitModal';
 import { useSimpleTranslation } from "../context/SimpleTranslationContext";
 import { useTranslation } from "../context/TranslationContext";
 import AnnouncementBell from "./AnnouncementBell";
-import core5Logo from '../../../core5 logo with hat.png';
+import LoginFooter from './LoginFooter';
+import whiteLogo from '../../../White Logo.png';
 
 const AdminLayout = ({ children }) => {
   const location = useLocation();
@@ -48,7 +49,7 @@ const AdminLayout = ({ children }) => {
           return;
         }
 
-        const res = await fetch(`${API}/subscriptions/check-feature-access`, {
+        const res = await fetch(`${API}/api/subscriptions/check-feature-access`, {
           headers: { Authorization: `Bearer ${token}` }
         });
 
@@ -100,10 +101,10 @@ const AdminLayout = ({ children }) => {
       : t('nav_dashboard');
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="h-screen bg-background overflow-hidden">
       {/* ================= DESKTOP SIDEBAR ================= */}
       <aside
-        className={`fixed top-0 left-0 h-screen bg-gradient-to-b from-slate-900 to-slate-800 text-white shadow-lg z-40 hidden lg:block transition-all duration-300 ${
+        className={`fixed top-0 left-0 h-full bg-gradient-to-b from-slate-900 to-slate-800 text-white shadow-lg z-40 hidden lg:block transition-all duration-300 ${
           sidebarCollapsed ? "w-20" : "w-64"
         }`}
       >
@@ -112,16 +113,16 @@ const AdminLayout = ({ children }) => {
           <div className="h-24 sm:h-28 border-b border-white/10 flex items-center justify-center">
             {!sidebarCollapsed && (
               <img
-                src={core5Logo}
+                src={whiteLogo}
                 alt="Core5 Academy"
                 className="max-h-full w-auto object-contain"
               />
             )}
             {sidebarCollapsed && (
               <img
-                src={core5Logo}
+                src={whiteLogo}
                 alt="Core5 Academy"
-                className="h-12 w-auto object-contain"
+                className="h-16 w-auto object-contain"
               />
             )}
           </div>
@@ -171,7 +172,7 @@ const AdminLayout = ({ children }) => {
       </aside>
 
       {/* ================= MAIN CONTENT ================= */}
-      <main className={`transition-all ${sidebarCollapsed ? "lg:ml-20" : "lg:ml-64"}`}>
+      <main className={`transition-all flex-1 overflow-hidden ${sidebarCollapsed ? "lg:ml-20" : "lg:ml-64"} h-screen flex flex-col`}>
         {/* Top Bar */}
         <header className="sticky top-0 bg-white border-b z-30 px-4 py-3">
           <div className="flex items-center justify-between">
@@ -214,8 +215,11 @@ const AdminLayout = ({ children }) => {
         )}
 
         {/* Page Content */}
-        <div className="p-4 md:p-6">{children}</div>
+        <div className="flex-1 overflow-y-auto p-4 md:p-6">{children}</div>
       </main>
+      
+      {/* Footer */}
+      <LoginFooter />
     </div>
   );
 };

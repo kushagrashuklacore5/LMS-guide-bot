@@ -14,7 +14,8 @@ import { useAuth } from "../auth/auth";
 import QuotaLimitModal from './QuotaLimitModal';
 import { useTranslation } from "../context/TranslationContext";
 import AnnouncementBell from "./AnnouncementBell";
-import core5Logo from '../../../core5 logo with hat.png';
+import LoginFooter from './LoginFooter';
+import whiteLogo from '../../../White Logo.png';
 
 const StudentLayout = ({ children }) => {
   const location = useLocation();
@@ -62,7 +63,7 @@ const StudentLayout = ({ children }) => {
           return;
         }
 
-        const res = await fetch(`${API}/subscriptions/check-feature-access`, {
+        const res = await fetch(`${API}/api/subscriptions/check-feature-access`, {
           headers: { Authorization: `Bearer ${token}` }
         });
 
@@ -135,12 +136,12 @@ const StudentLayout = ({ children }) => {
       : t('nav_dashboard');
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="h-screen bg-background overflow-hidden">
 
       {/* ================= DESKTOP SIDEBAR ================= */}
       <aside
         className={`
-        fixed top-0 left-0 h-screen z-40
+        fixed top-0 left-0 h-full z-40
         hidden lg:block transition-all duration-300
         ${sidebarCollapsed ? 'w-20' : 'w-64'}
         bg-gradient-to-b from-purple-700 via-purple-600 to-purple-500
@@ -153,16 +154,16 @@ const StudentLayout = ({ children }) => {
           <div className="h-24 sm:h-28 border-b border-white/10 flex items-center justify-center">
             {!sidebarCollapsed && (
               <img
-                src={core5Logo}
+                src={whiteLogo}
                 alt="Core5 Academy"
                 className="max-h-full w-auto object-contain"
               />
             )}
             {sidebarCollapsed && (
               <img
-                src={core5Logo}
+                src={whiteLogo}
                 alt="Core5 Academy"
-                className="h-12 w-auto object-contain"
+                className="h-16 w-auto object-contain"
               />
             )}
           </div>
@@ -259,8 +260,9 @@ const StudentLayout = ({ children }) => {
       {/* ================= MAIN CONTENT ================= */}
       <main
         className={`
-        transition-all duration-300 min-h-screen
+        transition-all duration-300 flex-1 overflow-hidden
         ${sidebarCollapsed ? 'lg:ml-20' : 'lg:ml-64'}
+        h-screen flex flex-col
       `}
       >
 
@@ -359,9 +361,12 @@ const StudentLayout = ({ children }) => {
         )}
 
         {/* ================= CONTENT AREA ================= */}
-        <div className="p-4 md:p-6">{children}</div>
+        <div className="flex-1 overflow-y-auto p-4 md:p-6">{children}</div>
 
       </main>
+      
+      {/* Footer */}
+      <LoginFooter />
 
       {/* ================= QUOTA MODAL (OVERLAY) ================= */}
       <QuotaLimitModal isOpen={showQuotaModal} onClose={() => setShowQuotaModal(false)} quotaDetails={quotaDetails} />

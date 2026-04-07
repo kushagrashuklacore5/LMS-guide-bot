@@ -12,7 +12,8 @@ import {
   Warehouse
 } from 'lucide-react';
 import { useAuth } from '../auth/auth';
-import core5Logo from '../../../core5 logo with hat.png';
+import LoginFooter from './LoginFooter';
+import whiteLogo from '../../../White Logo.png';
 
 const VendorLayout = ({ children }) => {
   const location = useLocation();
@@ -49,16 +50,16 @@ const VendorLayout = ({ children }) => {
           <div className="h-24 sm:h-28 border-b border-white/10 flex items-center justify-center">
             {!sidebarCollapsed && (
               <img
-                src={core5Logo}
+                src={whiteLogo}
                 alt="Core5 Academy"
                 className="max-h-full w-auto object-contain"
               />
             )}
             {sidebarCollapsed && (
               <img
-                src={core5Logo}
+                src={whiteLogo}
                 alt="Core5 Academy"
-                className="h-12 w-auto object-contain"
+                className="h-16 w-auto object-contain"
               />
             )}
           </div>
@@ -135,7 +136,7 @@ const VendorLayout = ({ children }) => {
       >
         <div className="flex flex-col h-full backdrop-blur-xl bg-white/5 p-4">
           <div className="flex justify-between items-center mb-6">
-            <img src={core5Logo} alt="Core5 Academy" className="h-12" />
+            <img src={whiteLogo} alt="Core5 Academy" className="h-16" />
             <button
               onClick={() => setMobileMenuOpen(false)}
               className="p-2 hover:bg-white/10 rounded-lg"
@@ -220,6 +221,9 @@ const VendorLayout = ({ children }) => {
           {children}
         </main>
       </div>
+      
+      {/* Footer */}
+      <LoginFooter />
     </div>
   );
 };

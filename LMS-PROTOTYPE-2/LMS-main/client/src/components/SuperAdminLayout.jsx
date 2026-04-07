@@ -13,7 +13,8 @@ import {
 } from "lucide-react";
 import { useAuth } from "../auth/auth";
 import AnnouncementBell from "./AnnouncementBell";
-import core5Logo from '../../../core5 logo with hat.png';
+import LoginFooter from './LoginFooter';
+import whiteLogo from '../../../White Logo.png';
 
 const SuperAdminLayout = ({ children }) => {
   const location = useLocation();
@@ -35,7 +36,7 @@ const API_BASE = import.meta.env.VITE_BACKEND_URL || 'http://localhost:5002';
   useEffect(() => {
     const fetchSubscription = async () => {
       try {
-        const response = await fetch(`${API_BASE}/subscriptions/current`, {
+        const response = await fetch(`${API_BASE}/api/subscriptions/current`, {
           method: 'GET',
           headers: {
             'Content-Type': 'application/json',
@@ -109,7 +110,7 @@ const API_BASE = import.meta.env.VITE_BACKEND_URL || 'http://localhost:5002';
   // Helper function to refresh subscription data
   const fetchSubscription = async () => {
     try {
-      const response = await fetch(`${API_BASE}/subscriptions/current`, {
+      const response = await fetch(`${API_BASE}/api/subscriptions/current`, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
@@ -148,7 +149,7 @@ const API_BASE = import.meta.env.VITE_BACKEND_URL || 'http://localhost:5002';
   const cancelSubscription = async () => {
     if (!confirm('Are you sure you want to cancel your subscription and downgrade to Free?')) return;
     try {
-      const response = await fetch(`${API_BASE}/subscriptions/cancel`, {
+      const response = await fetch(`${API_BASE}/api/subscriptions/cancel`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -200,10 +201,10 @@ const API_BASE = import.meta.env.VITE_BACKEND_URL || 'http://localhost:5002';
     })?.name || 'Overview';
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100">
+    <div className="h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 overflow-hidden">
       {/* ================= DESKTOP SIDEBAR ================= */}
       <aside
-        className={`fixed top-0 left-0 h-screen bg-gradient-to-b from-slate-900 to-slate-800 text-white shadow-lg z-40 hidden lg:block transition-all duration-300 ${
+        className={`fixed top-0 left-0 h-full bg-gradient-to-b from-slate-900 to-slate-800 text-white shadow-lg z-40 hidden lg:block transition-all duration-300 ${
           sidebarCollapsed ? "w-20" : "w-64"
         }`}
       >
@@ -212,16 +213,16 @@ const API_BASE = import.meta.env.VITE_BACKEND_URL || 'http://localhost:5002';
           <div className="h-24 sm:h-28 border-b border-white/10 flex items-center justify-center">
             {!sidebarCollapsed && (
               <img
-                src={core5Logo}
+                src={whiteLogo}
                 alt="Core5 Academy"
                 className="max-h-full w-auto object-contain"
               />
             )}
             {sidebarCollapsed && (
               <img
-                src={core5Logo}
+                src={whiteLogo}
                 alt="Core5 Academy"
-                className="h-12 w-auto object-contain"
+                className="h-16 w-auto object-contain"
               />
             )}
           </div>
@@ -278,7 +279,7 @@ const API_BASE = import.meta.env.VITE_BACKEND_URL || 'http://localhost:5002';
           {/* Mobile Header */}
           <div className="h-24 sm:h-28 border-b border-white/10 flex items-center justify-between px-4">
             <img
-              src={core5Logo}
+              src={whiteLogo}
               alt="Core5 Academy"
               className="max-h-full w-auto object-contain"
             />
@@ -332,7 +333,7 @@ const API_BASE = import.meta.env.VITE_BACKEND_URL || 'http://localhost:5002';
       </div>
 
       {/* ================= MAIN CONTENT ================= */}
-      <div className={`lg:ml-${sidebarCollapsed ? "20" : "64"} transition-all duration-300`}>
+      <div className={`lg:ml-${sidebarCollapsed ? "20" : "64"} transition-all duration-300 h-screen overflow-hidden flex flex-col`}>
         {/* Desktop Header */}
         <header className="bg-white shadow-sm border-b border-gray-200 sticky top-0 z-30 hidden lg:block">
           <div className="px-6 py-4 flex items-center justify-between">
@@ -453,7 +454,7 @@ const API_BASE = import.meta.env.VITE_BACKEND_URL || 'http://localhost:5002';
         </header>
 
         {/* Page Content */}
-        <main className="p-4 lg:p-6">
+        <main className="flex-1 overflow-y-auto p-4 lg:p-6">
           {children}
         </main>
       </div>
@@ -501,6 +502,9 @@ const API_BASE = import.meta.env.VITE_BACKEND_URL || 'http://localhost:5002';
           </div>
         </div>
       )}
+      
+      {/* Footer */}
+      <LoginFooter />
     </div>
   );
 };
