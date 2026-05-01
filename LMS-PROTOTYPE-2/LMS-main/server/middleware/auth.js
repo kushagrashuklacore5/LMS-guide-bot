@@ -10,17 +10,23 @@ module.exports = (req, res, next) => {
 
     const token = authHeader.split(" ")[1];
 
-    const decoded = jwt.verify(token, process.env.JWT_SECRET || "default_jwt_secret_key");
-
-    // ✅ THIS IS THE KEY FIX
-    req.user = {
-      userId: decoded.userId,
-      role: decoded.role,
-      name: decoded.name,
-      email: decoded.email
-    };
-
-    next();
+    jwt.verify(token, process.env.JWT_SECRET, (err, decoded) => {
+      if (err) {
+        return res.status(401).json({ success: false, message: 'Invalid token' });
+      }
+      
+      // Attach user info to request
+      req.user = decoded;
+      
+      // For non-superadmin users, ensure superadminId is set
+      if (decoded.role !== 'superadmin' && !decoded.superadminId) {
+        // This should come from the user's record in the tenant database
+        // The tenant middleware will handle this
+        console.log('Non-superadmin user without superadminId:', decoded);
+      }
+      
+      next();
+    });
   } catch (error) {
     console.error("Auth middleware error:", error.message);
     return res.status(401).json({ message: "Invalid or expired token" });

@@ -13,14 +13,35 @@ const MentorClassrooms = () => {
 
   const [classrooms, setClassrooms] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [showCreateModal, setShowCreateModal] = useState(false);
+  const [selectedClassroom, setSelectedClassroom] = useState(null);
+  const [courseForm, setCourseForm] = useState({
+    title: "",
+    description: "",
+    category: "",
+    duration: "",
+    courseTeacherId: "",
+    studentIds: [],
+  });
 
   const fetchAssignedClassrooms = async () => {
     try {
       setLoading(true);
       
+      console.log("🔍 DEBUG: fetchAssignedClassrooms called");
+      console.log("👤 DEBUG: User object:", user);
+      console.log("🔑 DEBUG: Token available:", !!token);
+      
+      // Always set loading to false in a timeout to prevent infinite loading
+      const loadingTimeout = setTimeout(() => {
+        setLoading(false);
+        console.log("⏰ DEBUG: Loading timeout - forcing loading to false");
+      }, 5000);
+      
       if (!user?.id && !user?._id) {
-        console.error("No user ID available");
+        console.error("❌ DEBUG: No user ID available");
         setClassrooms([]);
+        clearTimeout(loadingTimeout);
         setLoading(false);
         return;
       }
@@ -28,25 +49,42 @@ const MentorClassrooms = () => {
       const userId = user.id || user._id;
       const headers = token ? { Authorization: `Bearer ${token}` } : {};
       
+      console.log("🔍 DEBUG: User ID:", userId);
+      console.log("🔗 DEBUG: API URL:", `${API}/classrooms/my-classrooms`);
+      console.log("🔑 DEBUG: Headers:", headers);
+      
       // Fetch classrooms assigned to this mentor
-      const res = await fetch(`${API}/classrooms/mentor/${userId}`, {
+      const res = await fetch(`${API}/classrooms/my-classrooms`, {
         headers: headers,
       });
       
+      console.log("📊 DEBUG: Response status:", res.status);
+      console.log("📊 DEBUG: Response ok:", res.ok);
+      
       const data = await res.json();
       
+      console.log("📋 DEBUG: Response data:", data);
+      
+      clearTimeout(loadingTimeout);
+      
       if (!res.ok) {
-        console.warn("API Error:", data.message);
+        console.warn("❌ DEBUG: API Error:", data.message);
         setClassrooms([]);
       } else {
         // Handle both array and wrapped response
         const classroomList = data.data || data.classrooms || data;
         const validClassrooms = Array.isArray(classroomList) ? classroomList : [];
+        
+        console.log("📋 DEBUG: Extracted classroomList:", classroomList);
+        console.log("📋 DEBUG: Valid classrooms:", validClassrooms);
+        console.log("📋 DEBUG: Is array:", Array.isArray(classroomList));
+        console.log("📋 DEBUG: Length:", validClassrooms.length);
+        
         setClassrooms(validClassrooms);
         console.log(`✅ Loaded ${validClassrooms.length} classrooms for user ${userId}`);
       }
     } catch (err) {
-      console.error("Fetch error:", err);
+      console.error("❌ DEBUG: Fetch error:", err);
       setClassrooms([]);
     } finally {
       setLoading(false);
@@ -55,71 +93,27 @@ const MentorClassrooms = () => {
 
   useEffect(() => {
     fetchAssignedClassrooms();
+    
+    // Safety timeout to prevent infinite loading
+    const safetyTimeout = setTimeout(() => {
+      setLoading(false);
+      console.log("⚠️ SAFETY: Forced loading to false after 10 seconds");
+    }, 10000);
+    
+    return () => clearTimeout(safetyTimeout);
   }, []);
 
   const handleCreateCourse = (classroom) => {
-    setSelectedClassroom(classroom);
-    setCourseForm({
-      title: "",
-      description: "",
-      category: "",
-      duration: "",
-      courseTeacherId: "",
-      studentIds: [],
+    // Navigate to CreateCourse page with classroom context
+    navigate('/mentor/create-course', { 
+      state: { 
+        classroomId: classroom._id || classroom.id,
+        classroomName: classroom.name 
+      } 
     });
-    setShowCreateModal(true);
   };
 
-  const handleCourseFormChange = (e) => {
-    const { name, value } = e.target;
-    setCourseForm(prev => ({ ...prev, [name]: value }));
-  };
-
-  const toggleStudentSelection = (studentId) => {
-    setCourseForm(prev => ({
-      ...prev,
-      studentIds: prev.studentIds.includes(studentId)
-        ? prev.studentIds.filter(id => id !== studentId)
-        : [...prev.studentIds, studentId]
-    }));
-  };
-
-  const submitCreateCourse = async (e) => {
-    e.preventDefault();
-
-    if (!courseForm.title || !courseForm.category || !courseForm.duration || !courseForm.courseTeacherId) {
-      toast.error('Please fill all required fields');
-      return;
-    }
-
-    try {
-      const res = await fetch(`${API}/courses/create-course`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({
-          ...courseForm,
-          classroomId: selectedClassroom._id,
-        }),
-      });
-
-      if (!res.ok) throw new Error('Failed to create course');
-
-      toast.success('Course created successfully');
-      setShowCreateModal(false);
-      
-      // Refresh courses for this classroom
-      if (selectedClassroom) {
-        fetchCoursesByClassroom(selectedClassroom._id);
-      }
-    } catch (err) {
-      console.error(err);
-      toast.error('Failed to create course');
-    }
-  };
-
+  
   return (
     <MentorLayout>
       <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 p-8">
@@ -204,8 +198,25 @@ const MentorClassrooms = () => {
 
                   {/* Card Footer */}
                   <div className="bg-gradient-to-r from-gray-50 to-gray-100 px-6 py-4 border-t-2 border-gray-200 flex items-center justify-between group-hover:bg-blue-50 transition">
-                    <span className="text-sm text-gray-600 font-medium">{t('view_details')} →</span>
-                    <ArrowRight className="w-5 h-5 text-blue-600 group-hover:translate-x-1 transition-transform" />
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleCreateCourse(classroom);
+                      }}
+                      className="flex items-center gap-2 px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition text-sm"
+                    >
+                      <Plus size={16} />
+                      {t('create_course')}
+                    </button>
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        navigate(`/mentor/classroom/${classroom._id || classroom.id}`);
+                      }}
+                      className="flex items-center gap-2 text-blue-600 hover:text-blue-700 transition text-sm font-medium"
+                    >
+                      {t('view_details')} →
+                    </button>
                   </div>
                 </div>
               ))}

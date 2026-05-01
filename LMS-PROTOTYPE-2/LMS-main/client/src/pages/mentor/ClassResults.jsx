@@ -54,18 +54,25 @@ const ClassResults = () => {
     }
   };
 
-  // Fetch Students in Classroom
+  // Fetch All Students
   const fetchStudents = async (classroomId) => {
     try {
-      console.log('Fetching students for classroom:', classroomId);
-      const res = await fetch(`${API}/classrooms/${classroomId}/students`, {
+      console.log('Fetching all students for results...');
+      const res = await fetch(`${API}/users?role=student`, {
         headers: { Authorization: `Bearer ${token}` },
       });
 
       const data = await res.json();
       const studentsList = data.data || data;
-      console.log('Students fetched:', studentsList);
-      setStudents(Array.isArray(studentsList) ? studentsList : []);
+      console.log('All students fetched:', studentsList);
+      
+      // Filter to only show students (not admins, mentors, etc.)
+      const filteredStudents = Array.isArray(studentsList) 
+        ? studentsList.filter(user => user.role === 'student')
+        : [];
+      
+      console.log('Filtered students (role=student):', filteredStudents.length);
+      setStudents(filteredStudents);
     } catch (err) {
       console.error("Failed to fetch students:", err);
       toast.error("Failed to load students");

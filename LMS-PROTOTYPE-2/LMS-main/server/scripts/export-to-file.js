@@ -1,5 +1,5 @@
 const fs = require('fs');
-const db = require('../config/sqlite-db');
+const db = require('../config/database-switch');
 const translationService = require('../services/translationService');
 
 async function exportTableToFile(tableName = 'classrooms', lang = 'ar', outPath = 'C:\\Windows\\Temp\\classrooms_ar_full.csv') {
@@ -7,7 +7,7 @@ async function exportTableToFile(tableName = 'classrooms', lang = 'ar', outPath 
     await translationService.isServiceAvailable();
 
     const pragma = await new Promise((resolve, reject) => {
-      db.all(`PRAGMA table_info(${tableName})`, (err, cols) => {
+      db.all(`SELECT column_name, data_type FROM information_schema.columns WHERE table_name = '${tableName})`, (err, cols) => {
         if (err) return reject(err);
         resolve(cols.map(c => c.name));
       });

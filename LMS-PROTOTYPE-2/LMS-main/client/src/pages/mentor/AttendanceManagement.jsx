@@ -68,11 +68,11 @@ const AttendanceManagement = () => {
     }
   };
 
-  // Fetch Students in Classroom
+  // Fetch All Students
   const fetchStudents = async (classroomId) => {
     try {
-      console.log('Fetching students for classroom:', classroomId);
-      const res = await fetch(`${API}/classrooms/${classroomId}/students`, {
+      console.log('Fetching all students for attendance...');
+      const res = await fetch(`${API}/users?role=student`, {
         headers: { Authorization: `Bearer ${token}` },
       });
 
@@ -86,12 +86,19 @@ const AttendanceManagement = () => {
       const studentList = unwrapResponse(data);
       console.log('Unwrapped students:', studentList);
       
+      // Filter to only show students (not admins, mentors, etc.)
+      const filteredStudents = Array.isArray(studentList) 
+        ? studentList.filter(user => user.role === 'student')
+        : [];
+      
+      console.log('Filtered students (role=student):', filteredStudents.length);
+      
       // Ensure students have proper IDs
-      const processedStudents = Array.isArray(studentList) ? studentList.map(s => ({
+      const processedStudents = filteredStudents.map(s => ({
         ...s,
         id: s.id || s._id,
         _id: s._id || s.id
-      })) : [];
+      }));
       
       setStudents(processedStudents);
 

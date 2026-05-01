@@ -1,8 +1,8 @@
-const db = require('./config/sqlite-db');
+const db = require('config/database-switch');
 
 function print(obj){ console.log(JSON.stringify(obj, null, 2)); }
 
-db.all("PRAGMA table_info(users)", (err, cols) => {
+db.all("SELECT column_name, data_type FROM information_schema.columns WHERE table_name = 'users)", (err, cols) => {
   if (err) {
     console.error('PRAGMA error', err.message);
     process.exit(1);

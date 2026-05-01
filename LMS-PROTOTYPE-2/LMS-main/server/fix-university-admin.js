@@ -1,5 +1,5 @@
 // Fix university admin assignment
-const db = require('./config/sqlite-db');
+const db = require('config/database-switch');
 
 function fixUniversityAdmin() {
   console.log('🔧 Fixing University Admin Assignment\n');

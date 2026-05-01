@@ -7,29 +7,33 @@ const {
   activateFreeTrial,
   cancelSubscription,
   checkFeatureAccess,
-  testUpgradeSubscription
+  testUpgradeSubscription,
+  debugFeatureAccess
 } = require('../controllers/subscription-controller');
 const authMiddleware = require('../middleware/authMiddleware');
 
 // Get current subscription
-router.get('/current', authMiddleware, getCurrentSubscription);
+router.get('/current', getCurrentSubscription);
 
 // Check feature access (Calendar, Export, etc.)
-router.get('/check-feature-access', authMiddleware, checkFeatureAccess);
+router.get('/check-feature-access', checkFeatureAccess);
 
 // Create subscription order
-router.post('/create-order', authMiddleware, createSubscriptionOrder);
+router.post('/create-order', createSubscriptionOrder);
 
 // Verify subscription payment and activate
-router.post('/verify-payment', authMiddleware, verifySubscriptionPayment);
+router.post('/verify-payment', verifySubscriptionPayment);
 
 // Activate free trial
-router.post('/activate-free-trial', authMiddleware, activateFreeTrial);
+router.post('/activate-free-trial', activateFreeTrial);
 
 // Cancel subscription
-router.post('/cancel', authMiddleware, cancelSubscription);
+router.post('/cancel', cancelSubscription);
 
 // Test upgrade subscription (for demonstration)
-router.post('/test-upgrade', authMiddleware, testUpgradeSubscription);
+router.post('/test-upgrade', testUpgradeSubscription);
+
+// Debug feature access (for testing)
+router.get('/debug-feature-access', debugFeatureAccess);
 
 module.exports = router;

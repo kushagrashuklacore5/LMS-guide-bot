@@ -1,12 +1,17 @@
-const db = require('../config/sqlite-db');
+
+// Helper function to get database from request context or fallback to master
+function getDatabaseFromRequest(req) {
+  return req.tenant?.database || require('../config/database-switch');
+}
+
 
 /**
  * Get superadmin's current subscription from SQLite
  * Falls back to Free tier if not found
  */
-const getSuperadminSubscription = (superadminId) => {
+const getSuperadminSubscription = (req, superadminId) => {
   return new Promise((resolve) => {
-    db.get(
+    getDatabaseFromRequest(req).get(
       'SELECT * FROM subscriptions WHERE superadminId = ?',
       [superadminId],
       (err, row) => {
@@ -70,9 +75,9 @@ const checkUserQuotaPerUniversity = (subscriptionPlan, userCount) => {
 /**
  * Count users in a university by role
  */
-const countUsersByRoleInUniversity = (universityId, role) => {
+const countUsersByRoleInUniversity = (req, universityId, role) => {
   return new Promise((resolve, reject) => {
-    db.get(
+    getDatabaseFromRequest(req).get(
       `SELECT COUNT(*) as count FROM users WHERE university_id = ? AND role = ?`,
       [universityId, role],
       (err, row) => {
@@ -86,9 +91,9 @@ const countUsersByRoleInUniversity = (universityId, role) => {
 /**
  * Count total users in a university
  */
-const countTotalUsersInUniversity = (universityId) => {
+const countTotalUsersInUniversity = (req, universityId) => {
   return new Promise((resolve, reject) => {
-    db.get(
+    getDatabaseFromRequest(req).get(
       `SELECT COUNT(*) as count FROM users WHERE university_id = ?`,
       [universityId],
       (err, row) => {
@@ -102,9 +107,9 @@ const countTotalUsersInUniversity = (universityId) => {
 /**
  * Count universities for a superadmin (based on their admin users)
  */
-const countUniversitiesForSuperadmin = () => {
+const countUniversitiesForSuperadmin = (req) => {
   return new Promise((resolve, reject) => {
-    db.get(
+    getDatabaseFromRequest(req).get(
       `SELECT COUNT(*) as count FROM universities`,
       [],
       (err, row) => {

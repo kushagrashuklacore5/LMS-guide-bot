@@ -89,7 +89,7 @@ import FeesCollection from "./pages/accountant/FeesCollection_temp";
 
 /* ================= STOREKEEPER ================= */
 
-import StorekeeperDashboard from "./storekeeper/StorekeeperDashboard";
+import StorekeeperDashboard from "./storekeeper/StorekeeperDashboardSimple";
 
 
 

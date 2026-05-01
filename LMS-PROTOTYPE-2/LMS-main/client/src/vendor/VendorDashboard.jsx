@@ -142,7 +142,7 @@ const VendorDashboard = () => {
       </div>
 
       {/* Stats Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      <div className="dashboard-grid mb-6">
         <StatCard
           title="Total Invoices"
           value={stats.totalInvoices}
@@ -170,7 +170,8 @@ const VendorDashboard = () => {
       </div>
 
       {/* Charts and Tables Row */}
-      <div className="bg-white rounded-xl shadow-lg p-6 border border-violet-100">
+      <div className="responsive-card">
+        <div className="responsive-card-content">
         {/* Recent Invoices */}
         <div className="mb-6">
           <div className="flex items-center justify-between mb-6">
@@ -216,6 +217,7 @@ const VendorDashboard = () => {
             )}
           </div>
         </div>
+      </div>
       </div>
     </div>
   );

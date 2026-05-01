@@ -1,4 +1,4 @@
-const db = require('../config/sqlite-db');
+
 
 class Translation {
   // Create translation table if not exists

@@ -4,7 +4,7 @@ const db = new sqlite3.Database('./lms_database.db');
 console.log('🔍 CHECKING ALL TABLES...');
 console.log('========================');
 
-db.all("SELECT name FROM sqlite_master WHERE type='table'", (err, tables) => {
+db.all("SELECT table_name FROM information_schema.tables WHERE table_schema = 'public'", (err, tables) => {
   if (err) {
     console.error('Error checking tables:', err);
     return;

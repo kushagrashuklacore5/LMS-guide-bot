@@ -10,7 +10,7 @@ const db = new sqlite3.Database(dbPath);
 console.log('📁 Database Path:', dbPath);
 
 // Check all tables that contain invoice data
-db.all("SELECT name FROM sqlite_master WHERE type='table' AND (name LIKE '%invoice%' OR name LIKE '%vendor%')", [], (err, tables) => {
+db.all("SELECT table_name FROM information_schema.tables WHERE table_schema = 'public' AND (name LIKE '%invoice%' OR name LIKE '%vendor%')", [], (err, tables) => {
   if (err) {
     console.error('❌ Error checking tables:', err);
     return;

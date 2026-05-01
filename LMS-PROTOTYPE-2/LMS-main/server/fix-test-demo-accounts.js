@@ -1,4 +1,4 @@
-const db = require('./config/sqlite-db');
+const db = require('config/database-switch');
 
 async function fixAndTestDemoAccounts() {
   console.log('=== FIXING AND TESTING DEMO ACCOUNTS ===');

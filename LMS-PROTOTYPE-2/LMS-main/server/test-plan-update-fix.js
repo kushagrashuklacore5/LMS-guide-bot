@@ -1,5 +1,5 @@
 // Test the fix by manually updating SuperAdmin-33 to Free plan
-const db = require('./config/sqlite-db');
+const db = require('config/database-switch');
 const planInheritance = require('./controllers/plan-inheritance-controller');
 
 console.log('🔧 Testing Plan Update Fix\n');

@@ -6,55 +6,20 @@ const router = express.Router();
 
 // Helper function to get vendor's university_id
 const getVendorUniversityId = (vendorId, callback) => {
-  // Get university_id from users table since vendors table doesn't exist
-  db.get('SELECT university_id FROM users WHERE id = ? AND role = "vendor"', [vendorId], (err, user) => {
+  db.get('SELECT university_id FROM vendors WHERE id = ?', [vendorId], (err, vendor) => {
     if (err) {
       callback(err, null);
     } else {
-      callback(null, user ? user.university_id : 1);
+      callback(null, vendor ? vendor.university_id : 1);
     }
   });
-};
-
-/**
- * CORS middleware for vendor routes
- */
-const corsMiddleware = (req, res, next) => {
-  console.log('🔍 CORS Middleware - Request URL:', req.url);
-  console.log('🔍 CORS Middleware - Method:', req.method);
-  console.log('🔍 CORS Middleware - Origin:', req.headers.origin);
-  console.log('🔍 CORS Middleware - Headers:', req.headers['access-control-request-headers']);
-  
-  // Set CORS headers
-  res.header('Access-Control-Allow-Origin', '*');
-  res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS, PATCH');
-  res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Authorization, Cache-Control, Accept, X-CSRF-Token, X-Auth-Token, X-Requested-With');
-  res.header('Access-Control-Allow-Credentials', 'true');
-  res.header('Access-Control-Max-Age', '86400'); // 24 hours
-  res.header('Access-Control-Expose-Headers', 'Content-Length, Content-Type');
-  
-  console.log('✅ CORS Headers Set:', {
-    'Access-Control-Allow-Origin': '*',
-    'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS, PATCH',
-    'Access-Control-Allow-Headers': 'Origin, X-Requested-With, Content-Type, Authorization, Cache-Control, Accept, X-CSRF-Token, X-Auth-Token, X-Requested-With'
-  });
-  
-  // Handle preflight requests
-  if (req.method === 'OPTIONS') {
-    console.log('✅ CORS Preflight Request - Sending 200');
-    res.status(200).send();
-    return;
-  }
-  
-  console.log('🔍 CORS Middleware - Passing to next()');
-  next();
 };
 
 /**
  * GET /api/vendor/stats
  * Get vendor dashboard statistics
  */
-router.get('/stats', corsMiddleware, authMiddleware, (req, res) => {
+router.get('/stats', authMiddleware, (req, res) => {
   try {
     const vendorId = req.user?.userId;
     
@@ -95,7 +60,7 @@ router.get('/stats', corsMiddleware, authMiddleware, (req, res) => {
         });
 
         // Get order stats
-        db.all('SELECT status, qty FROM orders WHERE vendorId = ? AND university_id = ?', [vendorId, universityId], (err, orders) => {
+        db.all('SELECT status, qty FROM orders WHERE vendor = ? AND university_id = ?', [req.user.name, universityId], (err, orders) => {
           if (err) {
             console.error('Get orders error:', err);
             return res.status(500).json({ success: false, message: 'Failed to fetch order stats' });
@@ -441,7 +406,7 @@ router.get('/stock/categories', authMiddleware, (req, res) => {
  * GET /api/vendor/stock
  * Get vendor's stock items
  */
-router.get('/stock', corsMiddleware, authMiddleware, (req, res) => {
+router.get('/stock', authMiddleware, (req, res) => {
   try {
     const vendorId = req.user?.userId;
     
@@ -455,17 +420,19 @@ router.get('/stock', corsMiddleware, authMiddleware, (req, res) => {
         return res.status(500).json({ success: false, message: 'Database error' });
       }
 
-      // Get vendor stock items
       db.all(
-        `SELECT vs.*, v.name as vendor_name FROM vendor_stock vs LEFT JOIN vendors v ON vs.vendor_id = v.id WHERE vs.vendor_id = ? AND vs.university_id = ? ORDER BY vs.updated_at DESC`,
+        'SELECT * FROM vendor_stock WHERE vendor_id = ? AND university_id = ? ORDER BY name',
         [vendorId, universityId],
-        (err, stock) => {
+        (err, items) => {
           if (err) {
-            console.error('Get vendor stock error:', err);
-            return res.status(500).json({ success: false, message: 'Failed to fetch vendor stock' });
+            console.error('Get stock items error:', err);
+            return res.status(500).json({ success: false, message: 'Failed to fetch stock items' });
           }
 
-          res.status(200).json({ success: true, data: stock || [] });
+          res.status(200).json({
+            success: true,
+            data: items || []
+          });
         }
       );
     });
@@ -479,7 +446,7 @@ router.get('/stock', corsMiddleware, authMiddleware, (req, res) => {
  * GET /api/vendor/stock/stats
  * Get vendor stock statistics
  */
-router.get('/stock/stats', corsMiddleware, authMiddleware, (req, res) => {
+router.get('/stock/stats', authMiddleware, (req, res) => {
   try {
     const vendorId = req.user?.userId;
     
@@ -752,98 +719,65 @@ router.put('/profile', authMiddleware, (req, res) => {
  * GET /api/vendor/requests
  * Get vendor's stock requests
  */
-router.get('/requests', corsMiddleware, authMiddleware, (req, res) => {
+router.get('/requests', authMiddleware, (req, res) => {
   try {
-    const userId = req.user?.userId;
+    const vendorId = req.user?.userId;
     
-    console.log('🔍 Vendor Requests API - User ID:', userId);
-    
-    if (!userId) {
-      console.log('❌ Vendor not authenticated');
+    if (!vendorId) {
       return res.status(401).json({ success: false, message: 'Vendor not authenticated' });
     }
 
-    // Get vendor ID from user email
-    db.get('SELECT id FROM vendors WHERE email = (SELECT email FROM users WHERE id = ?)', [userId], (err, vendorRow) => {
+    getVendorUniversityId(vendorId, (err, universityId) => {
       if (err) {
-        console.error('Get vendor ID error:', err);
+        console.error('Get university error:', err);
         return res.status(500).json({ success: false, message: 'Database error' });
       }
 
-      if (!vendorRow) {
-        console.log('❌ No vendor found for user ID:', userId);
-        return res.status(404).json({ success: false, message: 'Vendor not found' });
-      }
-
-      const vendorId = vendorRow.id;
-      console.log('✅ Found vendor ID for user:', { userId, vendorId });
-
-      getVendorUniversityId(vendorId, (err, universityId) => {
-        if (err) {
-          console.error('Get university error:', err);
-          return res.status(500).json({ success: false, message: 'Database error' });
-        }
-
-        console.log('🔍 Fetching requests for vendor:', { vendorId, universityId });
-
-        // Get requests that have items from this vendor
-        const query = `
-          SELECT DISTINCT 
-            sr.id, sr.title, sr.description, sr.status, sr.created_at, 
-            sr.expected_delivery_date, sr.urgency_level, sr.requested_by,
-            sri.item_name, sri.category, sri.quantity_requested, sri.unit_price, 
-            sri.total_price, sri.specifications, sri.preferred_brand, sri.alternatives_allowed
-          FROM stock_requests sr
-          JOIN stock_request_items sri ON sr.id = sri.request_id
-          WHERE sri.vendor_id = ? AND sr.university_id = ?
-          ORDER BY sr.created_at DESC
-        `;
-
-        db.all(query, [vendorId, universityId], (err, requests) => {
+      // Get requests that have items from this vendor
+      db.all(
+        `SELECT DISTINCT sr.*, u.name as storekeeper_name
+         FROM stock_requests sr
+         LEFT JOIN users u ON sr.storekeeper_id = u.id
+         LEFT JOIN stock_request_items sri ON sr.id = sri.request_id
+         WHERE sr.university_id = ? AND sri.vendor_id = ?
+         ORDER BY sr.created_at DESC`,
+        [universityId, vendorId],
+        (err, requests) => {
           if (err) {
             console.error('Get vendor requests error:', err);
-            return res.status(500).json({ success: false, message: 'Database error' });
+            return res.status(500).json({ success: false, message: 'Failed to fetch requests' });
           }
 
-          console.log('🔍 Raw requests from database:', requests.length);
-          console.log('🔍 Request data:', requests);
-
-          // Group by request ID
-          const groupedRequests = {};
-          requests.forEach(req => {
-            if (!groupedRequests[req.id]) {
-              groupedRequests[req.id] = {
-                id: req.id,
-                title: req.title,
-                description: req.description,
-                status: req.status,
-                created_at: req.created_at,
-                expected_delivery_date: req.expected_delivery_date,
-                urgency_level: req.urgency_level,
-                requested_by: req.requested_by,
-                items: []
-              };
-            }
-            
-            groupedRequests[req.id].items.push({
-              item_name: req.item_name,
-              category: req.category,
-              quantity_requested: req.quantity_requested,
-              unit_price: req.unit_price,
-              total_price: req.total_price,
-              specifications: req.specifications,
-              preferred_brand: req.preferred_brand,
-              alternatives_allowed: req.alternatives_allowed
+          // Get items for each request
+          const requestPromises = requests.map(request => {
+            return new Promise((resolve, reject) => {
+              db.all(
+                `SELECT sri.*, v.name as vendor_name
+                 FROM stock_request_items sri
+                 LEFT JOIN vendors v ON sri.vendor_id = v.id
+                 WHERE sri.request_id = ?`,
+                [request.id],
+                (err, items) => {
+                  if (err) reject(err);
+                  else resolve({ ...request, items: items || [] });
+                }
+              );
             });
           });
 
-          const finalRequests = Object.values(groupedRequests);
-          console.log('✅ Final grouped requests:', finalRequests.length);
-          console.log('✅ Sending response:', { success: true, data: finalRequests });
-
-          res.status(200).json({ success: true, data: finalRequests });
-        });
-      });
+          Promise.all(requestPromises)
+            .then(requestsWithItems => {
+              res.status(200).json({
+                success: true,
+                data: requestsWithItems
+              });
+            })
+            .catch(err => {
+              console.error('Get request items error:', err);
+              res.status(500).json({ success: false, message: 'Failed to fetch request items' });
+            });
+        }
+      );
     });
   } catch (error) {
     console.error('Vendor requests error:', error);
@@ -861,26 +795,13 @@ router.post('/requests/:id/respond', authMiddleware, (req, res) => {
     const { id } = req.params;
     const { action, note } = req.body;
     
-    console.log('🔍 Vendor respond request received:');
-    console.log('- Vendor ID:', vendorId);
-    console.log('- Request ID:', id);
-    console.log('- Action:', action);
-    console.log('- Note:', note);
-    console.log('- Request body:', req.body);
-    
     if (!vendorId) {
-      console.log('❌ Vendor not authenticated');
       return res.status(401).json({ success: false, message: 'Vendor not authenticated' });
     }
 
     if (!['accept', 'reject'].includes(action)) {
-      console.log('❌ Invalid action:', action);
       return res.status(400).json({ success: false, message: 'Invalid action' });
     }
-
-    // Allow vendors to respond to requests with status: pending, draft, or submitted
-    const allowedStatuses = ['pending', 'draft', 'submitted'];
-    console.log('- Allowed statuses:', allowedStatuses);
 
     getVendorUniversityId(vendorId, (err, universityId) => {
       if (err) {
@@ -888,334 +809,48 @@ router.post('/requests/:id/respond', authMiddleware, (req, res) => {
         return res.status(500).json({ success: false, message: 'Database error' });
       }
 
-      // First, get the request details and items
-      db.get(
-        'SELECT * FROM stock_requests WHERE id = ? AND university_id = ?',
-        [id, universityId],
-        (err, request) => {
+      // Update request status
+      const newStatus = action === 'accept' ? 'quoted' : 'rejected';
+      db.run(
+        'UPDATE stock_requests SET status = ? WHERE id = ? AND university_id = ?',
+        [newStatus, id, universityId],
+        function(err) {
           if (err) {
-            console.error('Get request error:', err);
-            return res.status(500).json({ success: false, message: 'Database error' });
+            console.error('Update request status error:', err);
+            return res.status(500).json({ success: false, message: 'Failed to update request' });
           }
 
-          if (!request) {
+          if (this.changes === 0) {
             return res.status(404).json({ success: false, message: 'Request not found' });
           }
 
-          // Check if request can be responded to
-          if (!allowedStatuses.includes(request.status)) {
-            return res.status(400).json({ 
-              success: false, 
-              message: `Cannot respond to request with status: ${request.status}` 
-            });
+          // Create vendor quote record
+          if (action === 'accept') {
+            db.run(
+              `INSERT INTO vendor_quotes (request_id, vendor_id, status, notes, created_at)
+               VALUES (?, ?, 'pending', ?, datetime('now'))`,
+              [id, vendorId, note || ''],
+              function(err) {
+                if (err) {
+                  console.error('Create vendor quote error:', err);
+                }
+              }
+            );
           }
 
-          console.log(`📋 Processing ${action} for request ${id} with status: ${request.status}`);
-
-          // Get request items
-          db.all(
-            'SELECT * FROM stock_request_items WHERE request_id = ? AND vendor_id = ?',
-            [id, vendorId],
-            (err, items) => {
-              if (err) {
-                console.error('Get request items error:', err);
-                return res.status(500).json({ success: false, message: 'Database error' });
-              }
-
-              if (action === 'accept') {
-                // Update stock quantities for each item
-                updateStockAndAcceptRequest(request, items, vendorId, universityId, note, res);
-              } else {
-                // Reject the request
-                rejectRequest(request, vendorId, universityId, note, res);
-              }
-            }
-          );
+          console.log(`Request ${id} ${action}ed by vendor ${vendorId}`);
+          res.status(200).json({
+            success: true,
+            message: `Request ${action}ed successfully`
+          });
         }
       );
     });
   } catch (error) {
-    console.error('Vendor respond error:', error);
+    console.error('Respond to request error:', error);
     res.status(500).json({ success: false, message: 'Server error' });
   }
 });
-
-function updateStockAndAcceptRequest(request, items, vendorId, universityId, note, res) {
-  console.log('🔄 Starting stock update and accept process...');
-  console.log('Request ID:', request.id);
-  console.log('Items count:', items.length);
-  console.log('Vendor ID:', vendorId);
-  console.log('University ID:', universityId);
-  console.log('Items to process:', items.map(item => ({ name: item.item_name, category: item.category, qty: item.quantity_requested })));
-  
-  let processedItems = 0;
-  let errors = [];
-  let stockUpdates = [];
-
-  // Process each item
-  items.forEach((item, index) => {
-    console.log(`\n📦 Processing item ${index + 1}: ${item.item_name}`);
-    console.log(`- Category: ${item.category}`);
-    console.log(`- Quantity requested: ${item.quantity_requested}`);
-    
-    // Find the corresponding vendor stock item (trim spaces and handle case)
-    const itemName = item.item_name.trim();
-    const itemCategory = item.category ? item.category.trim() : '';
-    
-    db.get(
-      'SELECT * FROM vendor_stock WHERE vendor_id = ? AND university_id = ? AND (TRIM(name) = TRIM(?) OR TRIM(name) = TRIM(?)) AND TRIM(category) = TRIM(?)',
-      [vendorId, universityId, itemName, item.item_name, itemCategory],
-      (err, stockItem) => {
-        console.log(`🔍 Stock lookup result for ${item.item_name}:`);
-        console.log('- Error:', err);
-        console.log('- Stock item found:', !!stockItem);
-        console.log('- Search params:', { itemName, itemCategory });
-        
-        if (stockItem) {
-          console.log('- Stock details:', { id: stockItem.id, quantity: stockItem.quantity, name: stockItem.name.trim(), category: stockItem.category.trim() });
-        }
-        
-        if (err) {
-          const errorMsg = `Error finding stock for ${item.item_name}: ${err.message}`;
-          console.log('❌', errorMsg);
-          errors.push(errorMsg);
-          checkComplete();
-          return;
-        }
-
-        if (!stockItem) {
-          const errorMsg = `Stock item not found: ${item.item_name} in ${item.category}`;
-          console.log('❌', errorMsg);
-          errors.push(errorMsg);
-          checkComplete();
-          return;
-        }
-
-        // Check if enough stock is available
-        if (stockItem.quantity < item.quantity_requested) {
-          const errorMsg = `Insufficient stock for ${item.item_name}. Available: ${stockItem.quantity}, Requested: ${item.quantity_requested}`;
-          console.log('❌', errorMsg);
-          errors.push(errorMsg);
-          checkComplete();
-          return;
-        }
-
-        // Update stock quantity
-        const newQuantity = stockItem.quantity - item.quantity_requested;
-        console.log(`📉 Updating stock for ${item.item_name}: ${stockItem.quantity} → ${newQuantity}`);
-        
-        db.run(
-          'UPDATE vendor_stock SET quantity = ?, updated_at = datetime("now") WHERE id = ?',
-          [newQuantity, stockItem.id],
-          function(err) {
-            console.log(`💾 Stock update result for ${item.item_name}:`);
-            console.log('- Error:', err);
-            console.log('- Changes:', this?.changes);
-            
-            if (err) {
-              const errorMsg = `Error updating stock for ${item.item_name}: ${err.message}`;
-              console.log('❌', errorMsg);
-              errors.push(errorMsg);
-            } else {
-              console.log(`✅ Successfully updated stock for ${item.item_name}: ${stockItem.quantity} → ${newQuantity}`);
-              
-              // Add to stock updates for response
-              stockUpdates.push({
-                stockId: stockItem.id,
-                itemName: item.item_name,
-                category: item.category,
-                oldQuantity: stockItem.quantity,
-                newQuantity: newQuantity,
-                quantityDeducted: item.quantity_requested
-              });
-            }
-            checkComplete();
-          }
-        );
-      }
-    );
-  });
-
-  function checkComplete() {
-    processedItems++;
-    console.log(`\n📊 Progress: ${processedItems}/${items.length} items processed`);
-    console.log(`📋 Errors collected so far: ${errors.length}`);
-    console.log(`📦 Stock updates collected: ${stockUpdates.length}`);
-    
-    if (errors.length > 0) {
-      console.log('❌ All errors:', errors);
-    }
-    
-    if (processedItems === items.length) {
-      console.log('\n🏁 All items processed. Checking for errors...');
-      
-      if (errors.length > 0) {
-        console.error('❌ Stock update errors:', errors);
-        console.log('📤 Sending error response to client');
-        return res.status(400).json({ 
-          success: false, 
-          message: 'Failed to update stock: ' + errors.join('; ') 
-        });
-      }
-
-      console.log('✅ All stock updates successful. Proceeding to accept request...');
-      acceptRequest(request, vendorId, universityId, note, res, stockUpdates);
-    }
-  }
-}
-
-function acceptRequest(request, vendorId, universityId, note, res, stockUpdates = []) {
-  console.log('✅ Starting request acceptance process...');
-  console.log('Request ID:', request.id);
-  console.log('Vendor ID:', vendorId);
-  console.log('University ID:', universityId);
-  console.log('Stock updates:', stockUpdates);
-  
-  // Fetch request items for bill generation
-  db.all('SELECT * FROM stock_request_items WHERE request_id = ?', [request.id], (err, items) => {
-    if (err) {
-      console.error('Error fetching request items:', err);
-      return res.status(500).json({ success: false, message: 'Failed to fetch request items' });
-    }
-    
-    console.log('📦 Fetched request items:', items.length);
-    
-    // Update request status to 'approved'
-    db.run(
-      'UPDATE stock_requests SET status = ?, updated_at = datetime("now") WHERE id = ?',
-      ['approved', request.id],
-      function(err) {
-        console.log('📝 Request status update result:');
-        console.log('- Error:', err);
-        console.log('- Changes:', this?.changes);
-        
-        if (err) {
-          console.error('❌ Update request status error:', err);
-          console.error('Error details:', {
-            message: err.message,
-            code: err.code,
-            errno: err.errno
-          });
-          return res.status(500).json({ success: false, message: 'Failed to update request' });
-        }
-
-        if (this.changes === 0) {
-          console.log('❌ No rows affected - request not found');
-          return res.status(404).json({ success: false, message: 'Request not found' });
-        }
-
-        console.log('✅ Request status updated successfully to "approved"');
-
-        // Create vendor quote record for tracking
-        const quoteNumber = `QUOTE-${Date.now()}`;
-        const quoteData = [request.id, vendorId, quoteNumber, 0, 'INR', 'accepted', note || 'Request approved and stock updated'];
-        
-        console.log('📋 Creating vendor quote record...');
-        console.log('- Quote data:', quoteData);
-        
-        db.run(
-          `INSERT INTO vendor_quotes (request_id, vendor_id, quote_number, total_amount, currency, status, notes, created_at, updated_at)
-           VALUES (?, ?, ?, ?, ?, ?, ?, datetime('now'), datetime('now'))`,
-          quoteData,
-          function(err) {
-            console.log('📋 Vendor quote creation result:');
-            console.log('- Error:', err);
-            console.log('- Quote ID:', this?.lastID);
-            
-            if (err) {
-              console.error('❌ Error creating vendor quote record:', err);
-              console.error('Error details:', {
-                message: err.message,
-                code: err.code,
-                errno: err.errno
-              });
-              // Don't fail the response, just log the error
-            } else {
-              console.log('✅ Vendor quote record created successfully');
-            }
-
-            console.log('🎉 Request acceptance completed successfully!');
-            console.log('📤 Sending success response to client');
-            
-            res.status(200).json({ 
-              success: true, 
-              message: 'Request approved successfully and stock quantities updated',
-              data: {
-                requestId: request.id,
-                status: 'approved',
-                stockUpdated: true,
-                stockUpdates: stockUpdates,
-                openBillModal: true,
-                billData: {
-                  requestNumber: request.request_number,
-                  title: request.title,
-                  description: request.description,
-                  items: items || [],
-                  totalAmount: request.total_amount,
-                  currency: request.currency,
-                  expectedDeliveryDate: request.expected_delivery_date,
-                  deliveryAddress: request.delivery_address,
-                  contactPerson: request.contact_person,
-                  contactEmail: request.contact_email,
-                  contactPhone: request.contact_phone,
-                  requestedBy: request.requested_by,
-                  department: request.department,
-                  budgetCode: request.budget_code,
-                  vendorId: vendorId,
-                  vendorName: request.vendor_name || 'Vendor'
-                }
-              }
-            });
-          }
-        );
-      }
-    );
-  });
-}
-
-function rejectRequest(request, vendorId, universityId, note, res) {
-  console.log('❌ Rejecting request:', request.id);
-  
-  // Update request status to 'rejected'
-  db.run(
-    'UPDATE stock_requests SET status = ?, updated_at = datetime("now") WHERE id = ?',
-    ['rejected', request.id],
-    function(err) {
-      if (err) {
-        console.error('Update request status error:', err);
-        return res.status(500).json({ success: false, message: 'Failed to update request' });
-      }
-
-      if (this.changes === 0) {
-        return res.status(404).json({ success: false, message: 'Request not found' });
-      }
-
-      // Create vendor quote record for tracking
-      db.run(
-        `INSERT INTO vendor_quotes (request_id, vendor_id, quote_number, total_amount, currency, status, notes, created_at, updated_at)
-         VALUES (?, ?, ?, ?, ?, ?, ?, datetime('now'), datetime('now'))`,
-        [request.id, vendorId, `QUOTE-${Date.now()}`, 0, 'INR', 'rejected', note || 'Request rejected by vendor'],
-        function(err) {
-          if (err) {
-            console.error('Error creating vendor quote record:', err);
-            // Don't fail the response, just log the error
-          }
-
-          console.log('✅ Request rejected successfully');
-          
-          res.status(200).json({ 
-            success: true, 
-            message: 'Request rejected successfully',
-            data: {
-              requestId: request.id,
-              status: 'rejected'
-            }
-          });
-        }
-      );
-    }
-  );
-}
 
 /**
  * POST /api/vendor/requests/:id/quote
@@ -1273,13 +908,13 @@ router.post('/requests/:id/quote', authMiddleware, (req, res) => {
 
 /**
  * POST /api/vendor/requests/:id/bill
- * Generate and send bill for approved request
+ * Generate and send bill for accepted quote
  */
 router.post('/requests/:id/bill', authMiddleware, (req, res) => {
   try {
     const vendorId = req.user?.userId;
     const { id } = req.params;
-    const { items, subtotal, tax, gst, total, bill_number, due_date, notes, payment_terms, delivery_terms, tax_rate, gst_rate } = req.body;
+    const { items, subtotal, tax, gst, total, bill_number, due_date } = req.body;
     
     if (!vendorId) {
       return res.status(401).json({ success: false, message: 'Vendor not authenticated' });
@@ -1293,12 +928,11 @@ router.post('/requests/:id/bill', authMiddleware, (req, res) => {
 
       // Get request details for bill
       db.get(
-        `SELECT sr.*, u.name as storekeeper_name, u.email as storekeeper_email, v.name as vendor_name, v.email as vendor_email
+        `SELECT sr.*, u.name as storekeeper_name, u.email as storekeeper_email
          FROM stock_requests sr
          LEFT JOIN users u ON sr.storekeeper_id = u.id
-         LEFT JOIN vendors v ON v.id = ?
          WHERE sr.id = ? AND sr.university_id = ?`,
-        [vendorId, id, universityId],
+        [id, universityId],
         (err, request) => {
           if (err) {
             console.error('Get request error:', err);
@@ -1311,9 +945,9 @@ router.post('/requests/:id/bill', authMiddleware, (req, res) => {
 
           // Create invoice/bill record
           db.run(
-            `INSERT INTO invoices (vendorId, invoiceNumber, issueDate, dueDate, amount, status, description, university_id, vendorName, items, tax_rate, gst_rate)
-             VALUES (?, ?, date('now'), ?, ?, 'pending', ?, ?, ?, ?, ?, ?)`,
-            [vendorId, bill_number, due_date, total, `Bill for request #${request.request_number}`, universityId, request.vendor_name || 'Vendor', JSON.stringify(items), tax_rate || 5, gst_rate || 18],
+            `INSERT INTO invoices (vendorId, invoiceNumber, issueDate, dueDate, amount, status, description, university_id)
+             VALUES (?, ?, datetime('now'), ?, ?, 'pending', ?, ?)`,
+            [vendorId, bill_number, due_date, total, `Bill for request #${request.request_number}`, universityId],
             function(err) {
               if (err) {
                 console.error('Create invoice error:', err);
@@ -1322,56 +956,49 @@ router.post('/requests/:id/bill', authMiddleware, (req, res) => {
 
               const invoiceId = this.lastID;
 
-              // Update request status to approved (billed is not allowed by database constraint)
-              db.run(
-                'UPDATE stock_requests SET status = ? WHERE id = ?',
-                ['approved', id]
-              );
-
-              // Create notification for storekeeper
-              db.run(
-                `INSERT INTO notifications (userId, title, message, type, entityId, entityType, university_id, createdAt)
-                 VALUES (?, ?, ?, ?, ?, ?, ?, datetime('now'))`,
-                [request.storekeeper_id, 'New Bill Received', `Bill ${bill_number} has been generated for request #${request.request_number}`, 'bill', invoiceId, 'invoice', universityId],
-                function(err) {
-                  if (err) {
-                    console.error('Create storekeeper notification error:', err);
-                  }
-                }
-              );
-
-              // Create notification for accountant
-              db.run(
-                `INSERT INTO notifications (userId, title, message, type, entityId, entityType, university_id, createdAt)
-                 VALUES (?, ?, ?, ?, ?, ?, ?, datetime('now'))`,
-                [1, 'New Bill Received', `Bill ${bill_number} has been generated by ${request.vendor_name || 'Vendor'} for request #${request.request_number}`, 'bill', invoiceId, 'invoice', universityId],
-                function(err) {
-                  if (err) {
-                    console.error('Create accountant notification error:', err);
-                  }
-                }
-              );
-
-              console.log(`✅ Bill ${bill_number} created and sent for request ${id}`);
-              console.log(`📧 Notifications sent to storekeeper and accountant`);
-
-              res.status(200).json({
-                success: true,
-                message: 'Bill sent successfully to storekeeper and accountant',
-                data: { 
-                  invoiceId, 
-                  bill_number,
-                  status: 'sent',
-                  sentTo: ['storekeeper', 'accountant']
-                }
+              // Create invoice items
+              const itemPromises = items.map(item => {
+                return new Promise((resolve, reject) => {
+                  db.run(
+                    `INSERT INTO invoice_items (invoiceId, itemName, quantity, unitPrice, total)
+                     VALUES (?, ?, ?, ?, ?)`,
+                    [invoiceId, item.item_name, item.quoted_quantity, item.quoted_price, item.quoted_price * item.quoted_quantity],
+                    function(err) {
+                      if (err) reject(err);
+                      else resolve(this.lastID);
+                    }
+                  );
+                });
               });
+
+              Promise.all(itemPromises)
+                .then(() => {
+                  // Update request status to billed
+                  db.run(
+                    'UPDATE stock_requests SET status = ? WHERE id = ?',
+                    ['billed', id]
+                  );
+
+                  // TODO: Send email notifications to storekeeper and accountant
+                  console.log(`Bill ${bill_number} created and sent for request ${id}`);
+
+                  res.status(200).json({
+                    success: true,
+                    message: 'Bill sent successfully to storekeeper and accountant',
+                    data: { invoiceId, bill_number }
+                  });
+                })
+                .catch(err => {
+                  console.error('Create invoice items error:', err);
+                  res.status(500).json({ success: false, message: 'Failed to create invoice items' });
+                });
             }
           );
         }
       );
     });
   } catch (error) {
-    console.error('Bill generation error:', error);
+    console.error('Generate bill error:', error);
     res.status(500).json({ success: false, message: 'Server error' });
   }
 });

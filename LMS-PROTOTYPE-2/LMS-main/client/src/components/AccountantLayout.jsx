@@ -19,7 +19,7 @@ import { useTranslation } from '../context/TranslationContext';
 import AnnouncementBell from './AnnouncementBell';
 import QuotaLimitModal from './QuotaLimitModal';
 import LoginFooter from './LoginFooter';
-import whiteLogo from '../../../White Logo.png';
+import whiteLogo from '../../../core5 logo new new-modified (1).png';
 
 const AccountantLayout = ({ children }) => {
   const location = useLocation();
@@ -294,7 +294,7 @@ const AccountantLayout = ({ children }) => {
         </header>
 
         {/* ================= PAGE CONTENT ================= */}
-        <div className="h-[calc(100%-5rem)] overflow-y-auto p-4 sm:p-6 lg:p-8">{children}</div>
+        <div className="flex-1 overflow-y-auto scrollable-content p-4 sm:p-6 lg:p-8">{children}</div>
       </main>
       
       {/* Footer */}

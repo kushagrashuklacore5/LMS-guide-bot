@@ -1,11 +1,14 @@
 const bcrypt = require("bcryptjs");
-const db = require("../config/sqlite-db");
+const tenantConnectionManager = require('../config/tenant-connection-manager');
+const db = require('../config/database-switch');
 const {
   checkAdminMentorQuota,
   checkAdminStudentQuota,
   checkAdminClassQuota,
   countUsersByRoleInUniversity
 } = require("../helpers/quotaHelper");
+
+
 
 const getUniversitySubscriptionPlan = (universityId) => {
   return new Promise((resolve) => {

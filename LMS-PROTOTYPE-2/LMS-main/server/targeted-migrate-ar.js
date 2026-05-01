@@ -1,4 +1,4 @@
-const db = require('./config/sqlite-db');
+const db = require('config/database-switch');
 const axios = require('axios');
 
 const TRANSLATOR = process.env.LIBRETRANSLATE_URL || 'http://localhost:5000/translate';
@@ -14,7 +14,7 @@ const tables = [
 
 function getColumns(table) {
   return new Promise((resolve) => {
-    db.all(`PRAGMA table_info(${table})`, (err, cols) => {
+    db.all(`SELECT column_name, data_type FROM information_schema.columns WHERE table_name = '${table})`, (err, cols) => {
       if (err) return resolve({ error: err.message });
       resolve({ cols });
     });

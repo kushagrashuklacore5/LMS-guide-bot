@@ -1,4 +1,4 @@
-const db = require('./config/sqlite-db');
+const db = require('./config/database-switch');
 
 db.all('SELECT id, email, role, name FROM users LIMIT 10', (err, rows) => {
   if (err) console.error(err);

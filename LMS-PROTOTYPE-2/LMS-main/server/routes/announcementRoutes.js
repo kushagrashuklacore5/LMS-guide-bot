@@ -2,7 +2,6 @@ const express = require("express");
 const router = express.Router();
 
 const authMiddleware = require("../middleware/authMiddleware");
-const { checkAnnouncementQuota } = require("../middleware/quotaMiddleware");
 const {
   createAnnouncement,
   getAllAnnouncements,
@@ -12,8 +11,8 @@ const {
 
 /* ================= ANNOUNCEMENT ROUTES ================= */
 
-// Create announcement (Admin / Mentor) - with quota check
-router.post("/", authMiddleware, checkAnnouncementQuota, createAnnouncement);
+// Create announcement (Admin / Mentor) - no quota restrictions
+router.post("/", authMiddleware, createAnnouncement);
 
 // Get announcements (Role based)
 router.get("/", authMiddleware, getAllAnnouncements);

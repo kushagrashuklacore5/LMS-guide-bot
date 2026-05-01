@@ -1,7 +1,12 @@
 const bcrypt = require('bcrypt');
 const otpService = require('../services/otpService');
 const emailService = require('../services/emailService');
-const db = require('../config/sqlite-db');
+
+// Helper function to get database from request context or fallback to master
+function getDatabaseFromRequest(req) {
+  return req.tenant?.database || require('../config/database-switch');
+}
+
 
 // Password Reset Controller
 const passwordResetController = {
@@ -18,7 +23,7 @@ const passwordResetController = {
       }
 
       // Check if email exists in database
-      db.get(
+      getDatabaseFromRequest(req).get(
         'SELECT email FROM users WHERE email = ?',
         [email],
         async (err, user) => {
@@ -38,7 +43,7 @@ const passwordResetController = {
           }
 
           // Check cooldown
-          const cooldownCheck = await otpService.canRequestOTP(email);
+          const cooldownCheck = await otpService.canRequestOTP(req, email);
           if (!cooldownCheck.canRequest) {
             return res.status(429).json({
               success: false,
@@ -49,7 +54,7 @@ const passwordResetController = {
 
           // Generate and store OTP
           const otp = otpService.generateOTP();
-          await otpService.storeOTP(email, otp);
+          await otpService.storeOTP(req, email, otp);
 
           // Send OTP email
           const emailResult = await emailService.sendOTPEmail(email, otp);
@@ -90,7 +95,7 @@ const passwordResetController = {
         });
       }
 
-      const verification = await otpService.verifyOTP(email, otp);
+      const verification = await otpService.verifyOTP(req, email, otp);
 
       if (!verification.valid) {
         let message = 'Invalid or expired OTP';
@@ -145,7 +150,7 @@ const passwordResetController = {
       }
 
       // Check if OTP is verified
-      const otpCheck = await otpService.isOTPVerified(email);
+      const otpCheck = await otpService.isOTPVerified(req, email);
       if (!otpCheck.verified) {
         return res.status(400).json({
           success: false,
@@ -157,7 +162,7 @@ const passwordResetController = {
       const hashedPassword = await bcrypt.hash(newPassword, 10);
 
       // Update password in database
-      db.run(
+      getDatabaseFromRequest(req).run(
         'UPDATE users SET password = ? WHERE email = ?',
         [hashedPassword, email],
         async function(err) {
@@ -176,7 +181,7 @@ const passwordResetController = {
           }
 
           // Clear OTP after successful password reset
-          await otpService.clearOTP(email);
+          await otpService.clearOTP(req, email);
 
           res.status(200).json({
             success: true,
@@ -205,7 +210,7 @@ const passwordResetController = {
         });
       }
 
-      const cooldownCheck = await otpService.canRequestOTP(email);
+      const cooldownCheck = await otpService.canRequestOTP(req, email);
       
       res.status(200).json({
         success: true,

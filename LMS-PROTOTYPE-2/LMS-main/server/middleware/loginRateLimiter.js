@@ -5,7 +5,7 @@ const crypto = require('crypto');
 
 // Configuration constants
 const CONFIG = {
-  MAX_ATTEMPTS_PER_MINUTE: 5,
+  MAX_ATTEMPTS_PER_MINUTE: 1000,
   BLOCK_DURATION_SECONDS: 60,
   ATTEMPT_WINDOW_SECONDS: 60,
   REDIS_PREFIX: 'login:',

@@ -1,4 +1,6 @@
-const db = require("../config/sqlite-db");
+const tenantConnectionManager = require('../config/tenant-connection-manager');
+
+
 
 /* ================= GET STUDENT DASHBOARD DATA ================= */
 const getStudentDashboard = async (req, res) => {

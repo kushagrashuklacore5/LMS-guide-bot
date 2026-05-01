@@ -1,4 +1,4 @@
-const db = require('./config/sqlite-db');
+const db = require('config/database-switch');
 
 db.all('SELECT id, name, adminId FROM universities ORDER BY id', (err, rows) => {
   console.log('=== EXISTING UNIVERSITIES ===');

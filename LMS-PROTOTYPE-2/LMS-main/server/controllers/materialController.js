@@ -1,6 +1,9 @@
-const db = require("../config/sqlite-db");
+const tenantConnectionManager = require('../config/tenant-connection-manager');
+const db = require('../config/database-switch');
 const path = require("path");
 const fs = require("fs");
+
+
 
 // ✅ UPLOAD COURSE MATERIAL (Video, PDF, or any file)
 exports.uploadMaterial = async (req, res) => {

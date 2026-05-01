@@ -4,7 +4,7 @@ const db = new sqlite3.Database('./data/lms-database.sqlite');
 console.log('🔍 Checking current database structure...\n');
 
 // Check users table structure
-db.all("PRAGMA table_info(users)", (err, columns) => {
+db.all("SELECT column_name, data_type FROM information_schema.columns WHERE table_name = 'users)", (err, columns) => {
   if (err) {
     console.error('Error getting users table schema:', err);
     return;
@@ -16,7 +16,7 @@ db.all("PRAGMA table_info(users)", (err, columns) => {
   });
   
   // Check universities table structure
-  db.all("PRAGMA table_info(universities)", (err, uniColumns) => {
+  db.all("SELECT column_name, data_type FROM information_schema.columns WHERE table_name = 'universities)", (err, uniColumns) => {
     if (err) {
       console.error('Error getting universities table schema:', err);
       return;
@@ -28,7 +28,7 @@ db.all("PRAGMA table_info(users)", (err, columns) => {
     });
     
     // Check subscriptions table structure
-    db.all("PRAGMA table_info(subscriptions)", (err, subColumns) => {
+    db.all("SELECT column_name, data_type FROM information_schema.columns WHERE table_name = 'subscriptions)", (err, subColumns) => {
       if (err) {
         console.error('Error getting subscriptions table schema:', err);
         return;

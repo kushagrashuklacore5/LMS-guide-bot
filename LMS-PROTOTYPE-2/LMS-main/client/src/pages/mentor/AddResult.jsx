@@ -89,11 +89,12 @@ const AddResult = () => {
 
   const fetchStudents = async (classroomId) => {
     try {
-      console.log('🔍 Fetching students for classroom:', classroomId);
-      console.log('🔗 API endpoint:', `${API}/classrooms/${classroomId}/students`);
+      console.log('🔍 Fetching all students for result creation...');
+      console.log('🔗 API endpoint:', `${API}/users?role=student`);
       console.log('🔑 Token available:', !!token);
       
-      const res = await fetch(`${API}/classrooms/${classroomId}/students`, {
+      // Fetch all students instead of classroom-specific students
+      const res = await fetch(`${API}/users?role=student`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       
@@ -107,7 +108,17 @@ const AddResult = () => {
       console.log('✅ Unwrapped students:', studentList);
       console.log('📊 Student count:', Array.isArray(studentList) ? studentList.length : 0);
       
-      setStudents(Array.isArray(studentList) ? studentList : []);
+      // Filter to only show students (not admins, mentors, etc.)
+      const filteredStudents = Array.isArray(studentList) 
+        ? studentList.filter(user => user.role === 'student')
+        : [];
+      
+      console.log('👥 Filtered students (role=student):', filteredStudents.length);
+      filteredStudents.forEach((student, index) => {
+        console.log(`   ${index + 1}. ${student.name} (${student.email})`);
+      });
+      
+      setStudents(filteredStudents);
       
       // Reset student selection when changing classroom
       setStudentId("");
@@ -249,7 +260,7 @@ const AddResult = () => {
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                Student ({students.length} available)
+                Student ({students.length} available in system)
               </label>
               <div className="relative">
                 <User className="absolute left-3 top-2.5 text-gray-400" size={16} />
@@ -266,7 +277,7 @@ const AddResult = () => {
                       </option>
                     ))
                   ) : (
-                    <option disabled>No students in this classroom</option>
+                    <option disabled>No students available in system</option>
                   )}
                 </select>
               </div>

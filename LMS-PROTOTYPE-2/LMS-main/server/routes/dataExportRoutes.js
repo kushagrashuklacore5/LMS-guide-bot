@@ -1,15 +1,23 @@
 const express = require('express');
 const router = express.Router();
-const db = require('../config/sqlite-db');
 const path = require('path');
 const fs = require('fs');
 const authMiddleware = require('../middleware/authMiddleware');
 const { checkExportDataQuota } = require('../middleware/quotaMiddleware');
 
+
+
+
+// Helper function to get database from request context or fallback to master
+function getDatabaseFromRequest(req) {
+  return req.tenant?.database || require('../config/database-switch');
+}
+
+
 // Get all tables in the database
 router.get('/tables', authMiddleware, checkExportDataQuota, async (req, res) => {
   try {
-    db.all("SELECT name FROM sqlite_master WHERE type='table'", (err, tables) => {
+    getDatabaseFromRequest(req).all("SELECT table_name FROM information_schema.tables WHERE table_schema = 'public'", (err, tables) => {
       if (err) {
         return res.status(500).json({ error: 'Error fetching tables' });
       }
@@ -32,7 +40,7 @@ router.get('/table/:tableName/structure', authMiddleware, checkExportDataQuota, 
       return res.status(400).json({ error: 'Invalid table name' });
     }
     
-    db.all(`PRAGMA table_info(${tableName})`, (err, columns) => {
+    getDatabaseFromRequest(req).all(`SELECT column_name, data_type FROM information_schema.columns WHERE table_name = '${tableName})`, (err, columns) => {
       if (err) {
         return res.status(500).json({ error: 'Error fetching table structure' });
       }
@@ -56,13 +64,13 @@ router.get('/table/:tableName/data', authMiddleware, checkExportDataQuota, async
     }
     
     // Get total count
-    db.get(`SELECT COUNT(*) as total FROM ${tableName}`, (err, countResult) => {
+    getDatabaseFromRequest(req).get(`SELECT COUNT(*) as total FROM ${tableName}`, (err, countResult) => {
       if (err) {
         return res.status(500).json({ error: 'Error fetching data count' });
       }
       
       // Get data
-      db.all(`SELECT * FROM ${tableName} LIMIT ? OFFSET ?`, [parseInt(limit), parseInt(offset)], (err, rows) => {
+      getDatabaseFromRequest(req).all(`SELECT * FROM ${tableName} LIMIT ? OFFSET ?`, [parseInt(limit), parseInt(offset)], (err, rows) => {
         if (err) {
           return res.status(500).json({ error: 'Error fetching table data' });
         }
@@ -91,7 +99,7 @@ router.get('/table/:tableName/csv', async (req, res) => {
     }
     
     // Get table structure first
-    db.all(`PRAGMA table_info(${tableName})`, (err, columns) => {
+    getDatabaseFromRequest(req).all(`SELECT column_name, data_type FROM information_schema.columns WHERE table_name = '${tableName})`, (err, columns) => {
       if (err) {
         return res.status(500).json({ error: 'Error fetching table structure' });
       }
@@ -99,7 +107,7 @@ router.get('/table/:tableName/csv', async (req, res) => {
       const columnNames = columns.map(col => col.name);
       
       // Get all data
-      db.all(`SELECT * FROM ${tableName}`, (err, rows) => {
+      getDatabaseFromRequest(req).all(`SELECT * FROM ${tableName}`, (err, rows) => {
         if (err) {
           return res.status(500).json({ error: 'Error fetching table data' });
         }
@@ -145,7 +153,7 @@ router.get('/table/:tableName/json', async (req, res) => {
     }
     
     // Get all data
-    db.all(`SELECT * FROM ${tableName}`, (err, rows) => {
+    getDatabaseFromRequest(req).all(`SELECT * FROM ${tableName}`, (err, rows) => {
       if (err) {
         return res.status(500).json({ error: 'Error fetching table data' });
       }
@@ -169,7 +177,7 @@ router.get('/table/:tableName/json', async (req, res) => {
 router.get('/database/json', async (req, res) => {
   try {
     // Get all tables
-    db.all("SELECT name FROM sqlite_master WHERE type='table'", (err, tables) => {
+    getDatabaseFromRequest(req).all("SELECT table_name FROM information_schema.tables WHERE table_schema = 'public'", (err, tables) => {
       if (err) {
         return res.status(500).json({ error: 'Error fetching tables' });
       }
@@ -185,7 +193,7 @@ router.get('/database/json', async (req, res) => {
       
       // Export each table
       tableNames.forEach(tableName => {
-        db.all(`SELECT * FROM ${tableName}`, (err, rows) => {
+        getDatabaseFromRequest(req).all(`SELECT * FROM ${tableName}`, (err, rows) => {
           completedTables++;
           
           if (!err) {
@@ -212,7 +220,7 @@ router.get('/database/json', async (req, res) => {
 // Get database statistics
 router.get('/stats', async (req, res) => {
   try {
-    db.all("SELECT name FROM sqlite_master WHERE type='table'", (err, tables) => {
+    getDatabaseFromRequest(req).all("SELECT table_name FROM information_schema.tables WHERE table_schema = 'public'", (err, tables) => {
       if (err) {
         return res.status(500).json({ error: 'Error fetching tables' });
       }
@@ -226,7 +234,7 @@ router.get('/stats', async (req, res) => {
       let completedTables = 0;
       
       tableNames.forEach(tableName => {
-        db.get(`SELECT COUNT(*) as count FROM ${tableName}`, (err, result) => {
+        getDatabaseFromRequest(req).get(`SELECT COUNT(*) as count FROM ${tableName}`, (err, result) => {
           completedTables++;
           
           if (!err) {

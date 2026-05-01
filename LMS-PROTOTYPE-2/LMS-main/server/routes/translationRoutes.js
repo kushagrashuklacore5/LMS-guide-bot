@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const translationService = require('../services/translationService');
-const db = require('../config/sqlite-db');
+
 
 // Get supported languages
 router.get('/languages', async (req, res) => {

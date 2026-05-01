@@ -1,6 +1,12 @@
-const db = require('../config/sqlite-db');
 const express = require('express');
 const router = express.Router();
+
+
+// Helper function to get database from request context or fallback to master
+function getDatabaseFromRequest(req) {
+  return req.tenant?.database || require('../config/database-switch');
+}
+
 
 // Get all transactions
 exports.getAllTransactions = (req, res) => {
@@ -27,7 +33,7 @@ exports.getAllTransactions = (req, res) => {
     ORDER BY p.createdAt DESC
   `;
 
-  db.all(query, (err, rows) => {
+  getDatabaseFromRequest(req).all(query, (err, rows) => {
     if (err) {
       console.error('Error fetching transactions:', err);
       return res.status(500).json({ success: false, message: 'Failed to fetch transactions' });
@@ -54,7 +60,7 @@ exports.createTransaction = (req, res) => {
     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
   `;
 
-  db.run(query, [studentId, amount, type, status || 'success', transactionId, razorpay_payment_id, razorpay_order_id, razorpay_signature, description], function(err) {
+  getDatabaseFromRequest(req).run(query, [studentId, amount, type, status || 'success', transactionId, razorpay_payment_id, razorpay_order_id, razorpay_signature, description], function(err) {
     if (err) {
       console.error('Error creating transaction:', err);
       return res.status(500).json({ success: false, message: 'Failed to create transaction' });
@@ -69,7 +75,7 @@ exports.createTransaction = (req, res) => {
       WHERE userId = ?
     `;
 
-    db.run(updateStudentQuery, [amount, amount, studentId], function(err) {
+    getDatabaseFromRequest(req).run(updateStudentQuery, [amount, amount, studentId], function(err) {
       if (err) {
         console.error('Error updating student fees:', err);
       }
@@ -109,7 +115,7 @@ exports.getStudentTransactions = (req, res) => {
     ORDER BY p.createdAt DESC
   `;
 
-  db.all(query, [studentId], (err, rows) => {
+  getDatabaseFromRequest(req).all(query, [studentId], (err, rows) => {
     if (err) {
       console.error('Error fetching student transactions:', err);
       return res.status(500).json({ success: false, message: 'Failed to fetch student transactions' });
@@ -137,7 +143,7 @@ exports.getPaymentStats = (req, res) => {
     FROM payments p
   `;
 
-  db.get(query, (err, row) => {
+  getDatabaseFromRequest(req).get(query, (err, row) => {
     if (err) {
       console.error('Error fetching payment stats:', err);
       return res.status(500).json({ success: false, message: 'Failed to fetch payment stats' });
@@ -155,6 +161,8 @@ exports.generateInvoice = (req, res) => {
   const { transaction, student, paymentOption, totalFees } = req.body;
   const path = require('path');
   const fs = require('fs');
+
+
   
   // Load logo as base64
   let logoBase64 = '';
@@ -236,7 +244,7 @@ router.get('/', (req, res) => {
     ORDER BY p.createdAt DESC
   `;
 
-  db.all(query, (err, rows) => {
+  getDatabaseFromRequest(req).all(query, (err, rows) => {
     if (err) {
       console.error('Error fetching transactions:', err);
       return res.status(500).json({ success: false, message: 'Failed to fetch transactions' });
@@ -262,7 +270,7 @@ router.post('/', (req, res) => {
     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
   `;
 
-  db.run(query, [studentId, amount, type, status || 'success', transactionId, razorpay_payment_id, razorpay_order_id, razorpay_signature, description], function(err) {
+  getDatabaseFromRequest(req).run(query, [studentId, amount, type, status || 'success', transactionId, razorpay_payment_id, razorpay_order_id, razorpay_signature, description], function(err) {
     if (err) {
       console.error('Error creating transaction:', err);
       return res.status(500).json({ success: false, message: 'Failed to create transaction' });
@@ -277,7 +285,7 @@ router.post('/', (req, res) => {
       WHERE userId = ?
     `;
 
-    db.run(updateStudentQuery, [amount, amount, studentId], function(err) {
+    getDatabaseFromRequest(req).run(updateStudentQuery, [amount, amount, studentId], function(err) {
       if (err) {
         console.error('Error updating student fees:', err);
       }
@@ -316,7 +324,7 @@ router.get('/student/:studentId', (req, res) => {
     ORDER BY p.createdAt DESC
   `;
 
-  db.all(query, [studentId], (err, rows) => {
+  getDatabaseFromRequest(req).all(query, [studentId], (err, rows) => {
     if (err) {
       console.error('Error fetching student transactions:', err);
       return res.status(500).json({ success: false, message: 'Failed to fetch student transactions' });
@@ -343,7 +351,7 @@ router.get('/stats', (req, res) => {
     FROM payments p
   `;
 
-  db.get(query, (err, row) => {
+  getDatabaseFromRequest(req).get(query, (err, row) => {
     if (err) {
       console.error('Error fetching payment stats:', err);
       return res.status(500).json({ success: false, message: 'Failed to fetch payment stats' });

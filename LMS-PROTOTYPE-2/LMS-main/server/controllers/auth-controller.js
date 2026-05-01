@@ -1,6 +1,6 @@
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
-const db = require("../config/sqlite-db");
+const tenantConnectionManager = require('../config/tenant-connection-manager');
 
 /* ================= REGISTER ================= */
 exports.register = async (req, res) => {
@@ -12,6 +12,9 @@ exports.register = async (req, res) => {
     }
 
     email = email.trim().toLowerCase();
+
+    // Get tenant database from request context (for register, we need to use master DB for superadmin creation)
+    const db = req.tenant?.database || require('../config/database-switch');
 
     // Check if user already exists
     db.get("SELECT * FROM users WHERE email = ?", [email], async (err, exists) => {
@@ -28,7 +31,7 @@ exports.register = async (req, res) => {
 
       // Insert new user
       db.run(
-        "INSERT INTO users (name, email, password, role, isApproved) VALUES (?, ?, ?, ?, ?)",
+        "INSERT INTO users (name, email, password, role, isApproved, created_at, updated_at) VALUES (?, ?, ?, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)",
         [name, email, hashedPassword, role || "student", 1],
         function(err) {
           if (err) {
@@ -62,11 +65,6 @@ exports.login = async (req, res) => {
 
     console.log(`🔍 Login attempt received: email=${email}, password=${password}`);
 
-    if (global.isDbConnected === false) {
-      console.log('❌ Database not connected');
-      return res.status(503).json({ message: "Database not connected. Please start database." });
-    }
-
     if (!email) {
       console.log('❌ Email is required');
       return res.status(400).json({ message: "Email is required" });
@@ -75,8 +73,11 @@ exports.login = async (req, res) => {
     const normalizedEmail = email.trim().toLowerCase();
     console.log(`🔍 Normalized email: ${normalizedEmail}`);
 
-    // Check if user exists
-    db.get("SELECT * FROM users WHERE email = ?", [normalizedEmail], async (err, user) => {
+    // For login, we need to check master database first for superadmin authentication
+    const masterDb = require('../config/database-switch');
+
+    // Check if user exists in master database (for superadmins)
+    masterDb.get("SELECT * FROM users WHERE email = ?", [normalizedEmail], async (err, user) => {
       if (err) {
         console.error("❌ Database error:", err);
         return res.status(500).json({ message: "Database error" });
@@ -102,8 +103,8 @@ exports.login = async (req, res) => {
         const userName = demoUsers[normalizedEmail].charAt(0).toUpperCase() + demoUsers[normalizedEmail].slice(1);
         console.log(`📝 User name will be: ${userName}, role: ${demoUsers[normalizedEmail]}`);
         
-        db.run(
-          "INSERT INTO users (name, email, password, role, isApproved) VALUES (?, ?, ?, ?, ?)",
+        masterDb.run(
+          "INSERT INTO users (name, email, password, role, isApproved, created_at, updated_at) VALUES (?, ?, ?, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)",
           [userName, normalizedEmail, hashedPassword, demoUsers[normalizedEmail], 1],
           function(err) {
             if (err) {
@@ -142,7 +143,7 @@ exports.login = async (req, res) => {
         console.log(`❌ User not found in users table: ${normalizedEmail}, checking vendors table...`);
         
         // Check if this is a vendor
-        db.get("SELECT * FROM vendors WHERE email = ?", [normalizedEmail], async (err, vendor) => {
+        masterDb.get("SELECT * FROM vendors WHERE email = ?", [normalizedEmail], async (err, vendor) => {
           if (err) {
             console.error("❌ Database error checking vendors:", err);
             return res.status(500).json({ message: "Database error" });
@@ -176,6 +177,8 @@ exports.login = async (req, res) => {
           } else {
             // Use SHA256 comparison (for vendors created by storekeeper)
             const crypto = require('crypto');
+
+
             const hashedInputPassword = crypto.createHash('sha256').update(password).digest('hex');
             isPasswordValid = hashedInputPassword === vendor.password;
             console.log(`🔐 Using SHA256 comparison for vendor: ${normalizedEmail}`);
@@ -232,7 +235,7 @@ exports.login = async (req, res) => {
       if (demoEmails.includes(normalizedEmail)) {
         console.log(`🔥 Demo login for: ${normalizedEmail}, user role from DB: ${user.role}`);
         const token = jwt.sign(
-          { userId: user.id, role: user.role, name: user.name, email: user.email, universityId: user.university_id || 1 },
+          { userId: user.id, role: user.role, name: user.name, email: user.email, universityId: user.university_id || 1, subscriptionPlan: user.subscriptionPlan || 'free' },
           process.env.JWT_SECRET || "default_jwt_secret_key",
           { expiresIn: "7d" }
         );
@@ -248,6 +251,7 @@ exports.login = async (req, res) => {
             email: user.email,
             role: user.role,
             isApproved: true,
+            subscriptionPlan: user.subscriptionPlan || 'free',
           },
         });
       }
@@ -260,7 +264,7 @@ exports.login = async (req, res) => {
       }
 
       const token = jwt.sign(
-        { userId: user.id, role: user.role, name: user.name, email: user.email, universityId: user.university_id || 1 },
+        { userId: user.id, role: user.role, name: user.name, email: user.email, universityId: user.university_id || 1, subscriptionPlan: user.subscriptionPlan || 'free' },
         process.env.JWT_SECRET || "default_jwt_secret_key",
         { expiresIn: "7d" }
       );
@@ -276,6 +280,7 @@ exports.login = async (req, res) => {
           email: user.email,
           role: user.role,
           isApproved: user.isApproved,
+          subscriptionPlan: user.subscriptionPlan || 'free',
         },
       });
     });

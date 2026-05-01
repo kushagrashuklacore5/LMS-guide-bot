@@ -1,5 +1,5 @@
 // Check Current Subscription Status
-const db = require('./config/sqlite-db');
+const db = require('config/database-switch');
 
 console.log('🔍 Current Subscription Monitor Check');
 console.log('=====================================');

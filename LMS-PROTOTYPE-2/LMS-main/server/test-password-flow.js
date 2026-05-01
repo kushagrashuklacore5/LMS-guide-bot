@@ -8,7 +8,7 @@ console.log('✅ Generated password:', password);
 console.log('✅ Hashed password:', hashPassword(password));
 
 // Test 2: Database structure
-const db = require('./config/sqlite-db');
+const db = require('config/database-switch');
 db.get('SELECT COUNT(*) as count FROM vendors', (err, row) => {
   if (err) {
     console.error('❌ Database error:', err);
@@ -16,7 +16,7 @@ db.get('SELECT COUNT(*) as count FROM vendors', (err, row) => {
     console.log(`✅ Current vendors count: ${row.count}`);
     
     // Test 3: Check if password column exists
-    db.all('PRAGMA table_info(vendors)', (err, columns) => {
+    db.all('SELECT column_name, data_type FROM information_schema.columns WHERE table_name = 'vendors)', (err, columns) => {
       if (err) {
         console.error('❌ Error getting table info:', err);
       } else {

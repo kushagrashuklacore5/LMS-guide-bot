@@ -1,5 +1,5 @@
 const bcrypt = require('bcryptjs');
-const db = require('./config/sqlite-db');
+const db = require('config/database-switch');
 
 console.log('👤 Creating a test superadmin for demonstration...');
 

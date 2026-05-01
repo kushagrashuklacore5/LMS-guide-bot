@@ -4,14 +4,14 @@
  * Run: node server/scripts/inspectAnnouncements.js
  */
 
-const db = require('../config/sqlite-db');
+const db = require('../config/database-switch');
 
 console.log('\n' + '='.repeat(70));
 console.log('📊 ANNOUNCEMENTS TABLE INSPECTION');
 console.log('='.repeat(70) + '\n');
 
 // Check table schema
-db.all('PRAGMA table_info(announcements)', (err, schema) => {
+db.all('SELECT column_name, data_type FROM information_schema.columns WHERE table_name = 'announcements)', (err, schema) => {
   if (err) {
     console.error('Error checking schema:', err);
     process.exit(1);

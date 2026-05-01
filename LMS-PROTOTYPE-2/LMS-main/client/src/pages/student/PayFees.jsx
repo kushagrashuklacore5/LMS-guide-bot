@@ -385,7 +385,7 @@ const PayFees = () => {
   }
 
   return (
-    <div className="p-6 bg-gray-50 min-h-screen">
+    <div className="p-6 bg-gray-50 h-screen overflow-y-auto">
       <h1 className="text-2xl font-bold mb-6">{t('pay_fees')}</h1>
 
       {/* Available Fee Structures - Select One to Pay */}

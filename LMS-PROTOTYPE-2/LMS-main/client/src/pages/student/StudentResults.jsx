@@ -33,9 +33,11 @@ const StudentResults = () => {
   if (loading) {
     return (
       <StudentLayout>
-        <div className="flex justify-center items-center h-96">
-          <div className="animate-spin h-10 w-10 border-4 border-primary border-t-transparent rounded-full"></div>
-          <p className="ml-4 text-text/60">{t('loading_courses')}</p>
+        <div className="flex-1 overflow-y-auto scrollable-content p-3 sm:p-4 md:p-6">
+          <div className="flex justify-center items-center h-96">
+            <div className="animate-spin h-10 w-10 border-4 border-primary border-t-transparent rounded-full"></div>
+            <p className="ml-4 text-text/60">{t('loading_courses')}</p>
+          </div>
         </div>
       </StudentLayout>
     );

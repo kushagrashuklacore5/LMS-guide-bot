@@ -1,13 +1,21 @@
 const express = require('express');
 const router = express.Router();
-const db = require('../config/sqlite-db');
+const authMiddleware = require('../middleware/authMiddleware');
+const { processBilingualInput } = require('../utils/bilingualHelper');
+const { autoTranslateBilingualInput, retrieveAndTranslateBilingualData } = require('../utils/autoTranslationHelper');
 
 // Get user language preference
-router.get('/language-preference', async (req, res) => {
+router.get('/language-preference', authMiddleware, async (req, res) => {
   try {
     const userId = req.user?.id;
     if (!userId) {
       return res.status(401).json({ error: 'Unauthorized' });
+    }
+
+    // Get tenant database from request context
+    const db = req.tenant?.database;
+    if (!db) {
+      return res.status(500).json({ error: 'Database not available' });
     }
 
     const query = 'SELECT language_code FROM user_language_preferences WHERE user_id = ?';
@@ -24,7 +32,7 @@ router.get('/language-preference', async (req, res) => {
 });
 
 // Update user language preference
-router.post('/language-preference', async (req, res) => {
+router.post('/language-preference', authMiddleware, async (req, res) => {
   try {
     const userId = req.user?.id;
     const { language } = req.body;
@@ -35,6 +43,12 @@ router.post('/language-preference', async (req, res) => {
     
     if (!language || typeof language !== 'string') {
       return res.status(400).json({ error: 'Language code is required' });
+    }
+
+    // Get tenant database from request context
+    const db = req.tenant?.database;
+    if (!db) {
+      return res.status(500).json({ error: 'Database not available' });
     }
 
     const query = `

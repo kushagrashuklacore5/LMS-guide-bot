@@ -4,7 +4,7 @@ import { Package, Users2, FileText, LayoutDashboard, ClipboardList, LogOut, Chev
 import { useAuth } from "../auth/auth";
 import { useTranslation } from "../context/TranslationContext";
 import RequestStatus from "./RequestStatus";
-import whiteLogo from '../../../White Logo.png';
+import whiteLogo from '../../../core5 logo new new-modified (1).png';
 
 const items = [
   { name: "Inventory", icon: Package },
@@ -36,7 +36,7 @@ export default function Sidebar() {
         )}
       </div>
 
-      <nav className="flex-1 p-4 overflow-y-auto space-y-2 hide-scrollbar">
+      <nav className="flex-1 p-4 overflow-y-auto space-y-2 scrollbar-thin scrollbar-thumb-gray-600 scrollbar-track-gray-200">
         {items.map((item) => {
           const Icon = item.icon;
           // Handle special cases for multi-word items

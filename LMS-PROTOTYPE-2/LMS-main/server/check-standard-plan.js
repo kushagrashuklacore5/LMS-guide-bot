@@ -1,5 +1,5 @@
 // Check Standard Plan Status
-const db = require('./config/sqlite-db');
+const db = require('config/database-switch');
 
 console.log('🔍 STANDARD PLAN INVESTIGATION');
 console.log('==============================');

@@ -1,11 +1,11 @@
-const db = require('../config/sqlite-db');
+const db = require('../config/database-switch');
 
 // Wait for DB connection
 setTimeout(() => {
   console.log('\n=== DEBUG: Classroom Assignment Data ===\n');
 
   // Check if table exists
-  db.all("SELECT name FROM sqlite_master WHERE type='table' AND name='student_classroom_assignment'", (err, tables) => {
+  db.all("SELECT table_name FROM information_schema.tables WHERE table_schema = 'public' AND name='student_classroom_assignment'", (err, tables) => {
     if (err) {
       console.error('Error checking tables:', err);
       process.exit(1);

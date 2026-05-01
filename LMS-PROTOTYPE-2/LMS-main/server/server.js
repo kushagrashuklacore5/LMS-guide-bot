@@ -1,10 +1,13 @@
 const express = require("express");
 const cors = require("cors");
-const connectDB = require("./config/sqlite-db");
+const connectDB = require("./config/database-switch");
 const path = require("path");
 const http = require("http");
 const { Server } = require("socket.io");
 const fs = require("fs");
+
+// Load environment variables early
+require('dotenv').config({ path: path.join(__dirname, '.env') });
 
 // Import security middleware
 const { securityMiddleware } = require('./middleware/security');
@@ -87,13 +90,33 @@ app.use((req, res, next) => {
   
   next();
 });
-require('dotenv').config({ path: path.join(__dirname, '.env')});
 
 console.log('Environment variables loaded:');
 console.log('PORT:', process.env.PORT);
+console.log('JWT_REFRESH_SECRET:', process.env.JWT_REFRESH_SECRET ? 'SET' : 'NOT SET');
 
-/* ================= DB ================= */
-const db = require("./config/sqlite-db");
+/* ================= DATABASE INITIALIZATION ================= */
+const masterDB = require("./config/master-db");
+const tenantConnectionManager = require("./config/tenant-connection-manager");
+
+// Initialize master database connection
+async function initializeDatabase() {
+  try {
+    console.log('🔧 Initializing master database connection...');
+    await masterDB.connect();
+    
+    // Set master database for tenant connection manager
+    tenantConnectionManager.setMasterDB(masterDB);
+    
+    console.log('✅ Database initialization complete');
+  } catch (error) {
+    console.error('❌ Database initialization failed:', error.message);
+    process.exit(1);
+  }
+}
+
+// Initialize database before starting server
+initializeDatabase();
 
 /* ================= APP & SERVER ================= */
 const server = http.createServer(app);
@@ -178,7 +201,7 @@ app.use(
     origin: allowedCorsOrigins,
     credentials: true,
     methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
-    allowedHeaders: ["Content-Type", "Authorization", "X-Requested-With"],
+    allowedHeaders: ["Content-Type", "Authorization", "X-Requested-With", "X-User-ID"],
     preflightContinue: false,
     optionsSuccessStatus: 204
   })
@@ -198,7 +221,8 @@ app.get("/health", (req, res) => {
 app.use("/api/auth", require("./routes/auth-routes"));
 app.use("/api/password-reset", require("./routes/passwordResetRoutes"));
 app.use("/api/users", require("./routes/user-routes"));
-app.use("/api/superadmin", require("./routes/superadminRoutes"));
+const tenantDatabaseIsolation = require("./middleware/tenant-db-isolated");
+// app.use("/api/superadmin", tenantDatabaseIsolation, require("./routes/superadminRoutes")); // REMOVED - DUPLICATE
 app.use("/api/student", require("./routes/student-routes"));
 
 /* Language Preferences */
@@ -294,6 +318,10 @@ app.use("/api/superadmin", require("./routes/superadminRoutes"));
 
 /* Universal CRUD Routes for All Entities - MUST be last */
 app.use("/api", require("./routes/universalRoutes"));
+
+/* Global Error Handler */
+const { globalErrorHandler } = require('./middleware/global-error-handler');
+app.use(globalErrorHandler);
 
 /* ================= ROOT ================= */
 app.get("/", (req, res) => {

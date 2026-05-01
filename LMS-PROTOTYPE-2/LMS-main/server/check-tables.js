@@ -7,7 +7,7 @@ const db = new sqlite3.Database(dbPath);
 console.log('🔍 Checking all tables in database...');
 console.log('📁 Database Path:', dbPath);
 
-db.all("SELECT name FROM sqlite_master WHERE type='table' ORDER BY name", [], (err, tables) => {
+db.all("SELECT table_name FROM information_schema.tables WHERE table_schema = 'public' ORDER BY name", [], (err, tables) => {
   if (err) {
     console.error('❌ Error checking tables:', err);
     return;

@@ -1,4 +1,4 @@
-const db = require('./config/sqlite-db');
+const db = require('config/database-switch');
 
 console.log('Running migration to add classTeacherId column...\n');
 
@@ -26,7 +26,7 @@ db.run(`ALTER TABLE classrooms ADD COLUMN classTeacherId INTEGER`, (err) => {
     }
     
     // Verify the schema
-    db.all(`PRAGMA table_info(classrooms)`, (err, rows) => {
+    db.all(`SELECT column_name, data_type FROM information_schema.columns WHERE table_name = 'classrooms)`, (err, rows) => {
       console.log('\n✅ Updated classrooms table structure:');
       rows.forEach(r => {
         console.log(`  - ${r.name} (${r.type})`);

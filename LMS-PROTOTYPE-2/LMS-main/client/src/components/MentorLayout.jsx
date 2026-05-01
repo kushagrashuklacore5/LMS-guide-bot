@@ -19,7 +19,7 @@ import QuotaLimitModal from './QuotaLimitModal';
 import { useTranslation } from "../context/TranslationContext";
 import AnnouncementBell from "./AnnouncementBell";
 import LoginFooter from './LoginFooter';
-import whiteLogo from '../../../White Logo.png';
+import whiteLogo from '../../../core5 logo new new-modified (1).png';
 
 const MentorLayout = ({ children }) => {
   const location = useLocation();
@@ -37,60 +37,9 @@ const MentorLayout = ({ children }) => {
     navigate("/login");
   };
 
-  const handleNavClick = async (e, item) => {
-    // Check if this is a restricted feature
-    const restrictedFeatures = {
-      '/mentor/attendance': 'attendance',
-      '/mentor/results': 'results',
-      '/mentor/requirements': 'requirements',
-      '/mentor/calendar': 'calendar'
-    };
-
-    const featureName = restrictedFeatures[item.path];
-
-    if (featureName) {
-      e.preventDefault();
-      try {
-        if (!token) {
-          setQuotaDetails({ 
-            type: 'feature', 
-            resourceType: featureName, 
-            message: 'Please login to access this feature.' 
-          });
-          setShowQuotaModal(true);
-          return;
-        }
-
-        const res = await fetch(`${API}/api/subscriptions/check-feature-access`, {
-          headers: { Authorization: `Bearer ${token}` }
-        });
-
-        if (!res.ok) throw new Error('feature check failed');
-        const data = await res.json();
-
-        // Check if current plan is 'free'
-        if (data.currentPlan === 'free') {
-          setQuotaDetails({ 
-            type: 'feature', 
-            resourceType: featureName, 
-            message: 'Your account is on the Free plan — upgrade to access this feature.' 
-          });
-          setShowQuotaModal(true);
-          return;
-        }
-
-        // If not free plan, allow navigation
-        navigate(item.path);
-      } catch (err) {
-        console.error('Feature check error', err);
-        setQuotaDetails({ 
-          type: 'feature', 
-          resourceType: featureName, 
-          message: 'Your account is on the Free plan — upgrade to access this feature.' 
-        });
-        setShowQuotaModal(true);
-      }
-    }
+  const checkFeatureAccess = async (e, item) => {
+    // DISABLED: Allow all features without checks
+    navigate(item.path);
   };
 
   // Language selector removed for Mentor portal
@@ -256,7 +205,7 @@ const MentorLayout = ({ children }) => {
         </header>
 
         {/* ===== CONTENT ===== */}
-        <div className="flex-1 overflow-y-auto p-4 md:p-6">{children}</div>
+        <div className="flex-1 overflow-y-auto scrollable-content p-4 md:p-6">{children}</div>
       </main>
       
       {/* Footer */}

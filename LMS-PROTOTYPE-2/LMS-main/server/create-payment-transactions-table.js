@@ -63,7 +63,7 @@ db.run(`CREATE TABLE IF NOT EXISTS payment_transactions (
       }
 
       // Verify the table was created
-      db.all("SELECT name FROM sqlite_master WHERE type='table' AND name='payment_transactions'", [], (err, tables) => {
+      db.all("SELECT table_name FROM information_schema.tables WHERE table_schema = 'public' AND name='payment_transactions'", [], (err, tables) => {
         if (err) {
           console.error('❌ Error verifying table:', err);
         } else {

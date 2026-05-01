@@ -102,7 +102,7 @@ const DesignAssessment = () => {
   const publishAssessment = async () => {
     try {
       const res = await fetch(
-        `${API}/assessments/publish/${assessmentId}`,
+        `${API}/assessments/${assessmentId}/publish`,
         {
           method: "PUT",
           headers: { Authorization: `Bearer ${token}` }

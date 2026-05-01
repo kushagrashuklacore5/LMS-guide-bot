@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 
-const db = require('../config/sqlite-db');
+const db = require('../config/database-switch');
 
 console.log('🧹 Clearing all classrooms...\n');
 

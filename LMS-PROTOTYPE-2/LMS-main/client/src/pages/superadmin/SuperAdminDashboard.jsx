@@ -177,6 +177,12 @@ const SuperAdminDashboard = () => {
 
       setLoading(true);
 
+      console.log('=== Loading Universities ===');
+      console.log('Token available:', !!token);
+      console.log('Token length:', token?.length || 0);
+      console.log('API URL:', API);
+      console.log('User from auth:', user);
+
       const res = await fetch(`${API}/superadmin/universities`, {
 
         headers: {
@@ -191,9 +197,11 @@ const SuperAdminDashboard = () => {
 
       if (res.ok) {
 
-        setUniversities(data.data || []);
+        const universitiesData = Array.isArray(data.data) ? data.data : (data.data?.universities || []);
+        
+        setUniversities(universitiesData);
 
-        setStats(prev => ({ ...prev, totalUniversities: data.data?.length || 0 }));
+        setStats(prev => ({ ...prev, totalUniversities: universitiesData.length || 0 }));
 
       }
 
@@ -216,6 +224,12 @@ const SuperAdminDashboard = () => {
     try {
 
       setLoading(true);
+
+      console.log('=== Loading Users ===');
+      console.log('Token available:', !!token);
+      console.log('Token length:', token?.length || 0);
+      console.log('API URL:', API);
+      console.log('User from auth:', user);
 
       const res = await fetch(`${API}/superadmin/users`, {
 
@@ -439,11 +453,11 @@ const SuperAdminDashboard = () => {
 
 
 
-  const filteredUniversities = universities.filter(uni => 
+  const filteredUniversities = (universities || []).filter(uni => 
 
     uni.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
 
-    uni.area.toLowerCase().includes(searchTerm.toLowerCase())
+    (uni.area && uni.area.toLowerCase().includes(searchTerm.toLowerCase()))
 
   );
 
@@ -638,8 +652,6 @@ const SuperAdminDashboard = () => {
                         <p className="text-sm text-gray-600">New institute added</p>
 
                       </div>
-
-                      <span className="text-xs text-gray-500">{index + 1}d ago</span>
 
                     </div>
 

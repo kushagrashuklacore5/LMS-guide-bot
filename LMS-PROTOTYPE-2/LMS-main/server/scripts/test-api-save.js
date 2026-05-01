@@ -1,4 +1,4 @@
-const db = require('../config/sqlite-db');
+const db = require('../config/database-switch');
 const { processBilingualInput } = require('../utils/bilingualHelper');
 
 console.log('=== Testing API Save with Bilingual Input ===\n');

@@ -14,20 +14,42 @@ const LoginFooter = () => {
   return (
     <>
       {/* Footer */}
-      <div className="fixed bottom-0 left-0 right-0 z-20 bg-black/40 backdrop-blur-sm border-t border-white/10">
+      <div className="bg-black/40 backdrop-blur-sm border-t border-white/10">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="py-4 flex flex-col sm:flex-row items-center justify-center gap-2 text-white/80 text-sm">
+          <div className="py-4 flex flex-col sm:flex-row items-center justify-between gap-4 text-white/80 text-sm">
+            {/* Copyright */}
             <span className="text-center sm:text-left">
               © 2026 Core5 Academy. All rights reserved.
             </span>
-            <span className="hidden sm:inline text-white/40">|</span>
-            <button
-              onClick={openTermsModal}
-              className="text-blue-400 hover:text-blue-300 underline transition-colors text-center sm:text-left"
-              aria-label="Open Terms & Conditions"
-            >
-              Terms & Conditions
-            </button>
+            
+            {/* Links */}
+            <div className="flex flex-wrap items-center justify-center gap-4 text-xs sm:text-sm">
+              <button
+                onClick={openTermsModal}
+                className="text-blue-400 hover:text-blue-300 underline transition-all duration-200 hover:scale-105 font-medium"
+                aria-label="Open Terms & Conditions"
+              >
+                Terms & Conditions
+              </button>
+              <span className="text-white/40">|</span>
+              <a
+                href="/privacy"
+                className="text-blue-400 hover:text-blue-300 underline transition-all duration-200 hover:scale-105 font-medium"
+                onClick={(e) => {
+                  e.preventDefault();
+                  alert('Privacy Policy page will be available soon!');
+                }}
+              >
+                Privacy Policy
+              </a>
+              <span className="text-white/40">|</span>
+              <a
+                href="mailto:support@core5academy.com"
+                className="text-blue-400 hover:text-blue-300 underline transition-all duration-200 hover:scale-105 font-medium"
+              >
+                Contact Us
+              </a>
+            </div>
           </div>
         </div>
       </div>
@@ -158,16 +180,16 @@ const LoginFooter = () => {
               <div className="flex justify-end gap-3">
                 <button
                   onClick={closeTermsModal}
-                  className="px-6 py-2 border border-gray-300 rounded-lg hover:bg-gray-100 transition"
+                  className="px-6 py-2 border border-gray-300 rounded-lg hover:bg-gray-100 transition-all duration-200 hover:scale-105 font-medium"
                 >
                   Cancel
                 </button>
                 <button
                   onClick={closeTermsModal}
                   disabled={!acknowledged}
-                  className={`px-6 py-2 rounded-lg font-medium transition ${
+                  className={`px-6 py-2 rounded-lg font-medium transition-all duration-200 ${
                     acknowledged
-                      ? 'bg-gradient-to-r from-blue-600 to-purple-600 text-white hover:from-blue-700 hover:to-purple-700'
+                      ? 'bg-gradient-to-r from-blue-600 to-purple-600 text-white hover:from-blue-700 hover:to-purple-700 hover:scale-105 shadow-lg'
                       : 'bg-gray-300 text-gray-500 cursor-not-allowed'
                   }`}
                 >

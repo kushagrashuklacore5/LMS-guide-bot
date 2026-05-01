@@ -271,13 +271,6 @@ router.post('/', authMiddleware, (req, res) => {
             return new Promise((resolve, reject) => {
               const totalPrice = (item.quantity_requested || 1) * (item.unit_price || 0);
               
-              console.log('Creating request item:', {
-                requestId,
-                vendor_id: item.vendor_id || null,
-                item_name: item.item_name,
-                category: item.category
-              });
-              
               db.run(
                 `INSERT INTO stock_request_items (
                   request_id, vendor_id, item_name, item_code, category, 
@@ -292,10 +285,7 @@ router.post('/', authMiddleware, (req, res) => {
                 ],
                 function(err) {
                   if (err) reject(err);
-                  else {
-                    console.log('Request item created with ID:', this.lastID);
-                    resolve(this.lastID);
-                  }
+                  else resolve(this.lastID);
                 }
               );
             });

@@ -1,8 +1,8 @@
-const db = require('./config/sqlite-db');
+const db = require('config/database-switch');
 
 console.log('Checking vendors table structure...');
 
-db.all('PRAGMA table_info(vendors)', (err, result) => {
+db.all('SELECT column_name, data_type FROM information_schema.columns WHERE table_name = 'vendors)', (err, result) => {
   if (err) {
     console.error('Error getting vendors table info:', err);
   } else {

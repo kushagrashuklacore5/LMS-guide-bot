@@ -5,13 +5,14 @@ import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
+import axiosInstance from '../utils/axiosInstance';
 import { Mail, Lock, Eye, EyeOff, Chrome, Twitter, Gamepad2, ArrowLeft, RefreshCw } from 'lucide-react';
 import LanguageSelector from '../components/LanguageSelector';
 import TermsConditionsModal from '../components/TermsConditionsModal';
 import LoginFooter from '../components/LoginFooter';
 import OTPInput from '../components/OTPInput';
 import videoBg from '../assets/login-bg.mp4';
-import whiteLogo from '../../../White Logo.png';
+import whiteLogo from '../../../core5-final-rbg.png';
 import passwordResetService from '../services/passwordResetService';
 
 /* ============================================================
@@ -19,18 +20,49 @@ import passwordResetService from '../services/passwordResetService';
    ============================================================ */
 
 const Login = () => {
-  const { loginUser, API: contextAPI } = useAuth();
+  const { loginUser, API: contextAPI, token } = useAuth();
   const { t } = useTranslation();
   const navigate = useNavigate();
   
   // Ensure API URL is always set
-  const API = contextAPI || '/api';
+  const API = 'http://localhost:5002/api';
+
+  // Security: Redirect if already logged in
+  useEffect(() => {
+    if (token && token.role === 'superadmin') {
+      // Verify token is still valid (basic check)
+      try {
+        const storedToken = localStorage.getItem('token');
+        if (storedToken) {
+          const decoded = JSON.parse(atob(storedToken.split('.')[1]));
+          if (decoded.exp * 1000 > Date.now()) {
+            navigate('/superadmin/dashboard');
+            return;
+          }
+        }
+      } catch (error) {
+        // Token is invalid, clear it
+        localStorage.removeItem('token');
+        localStorage.removeItem('user');
+      }
+    }
+  }, [token, navigate]);
 
   /* ================= STATE ================= */
   const [formData, setFormData] = useState({
     email: '',
     password: ''
   });
+
+  // Form validation errors
+  const [fieldErrors, setFieldErrors] = useState({
+    email: '',
+    password: ''
+  });
+
+  // Global error state
+  const [globalError, setGlobalError] = useState('');
+  const [errorType, setErrorType] = useState('');
 
   // Password reset states
   const [isPasswordReset, setIsPasswordReset] = useState(false);
@@ -51,9 +83,47 @@ const Login = () => {
   const [attemptInfo, setAttemptInfo] = useState(null);
   const [loginAttempts, setLoginAttempts] = useState(0);
 
+  /* ================= CLIENT-SIDE VALIDATION ================= */
+  const validateField = (name, value) => {
+    const errors = { ...fieldErrors };
+    
+    if (name === 'email') {
+      if (!value || value.trim() === '') {
+        errors.email = 'Email is required.';
+      } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)) {
+        errors.email = 'Enter a valid email address.';
+      } else {
+        errors.email = '';
+      }
+    }
+    
+    if (name === 'password') {
+      if (!value || value.trim() === '') {
+        errors.password = 'Password is required.';
+      } else {
+        errors.password = '';
+      }
+    }
+    
+    setFieldErrors(errors);
+    return Object.keys(errors).filter(key => errors[key]).length === 0;
+  };
+
+  const validateForm = () => {
+    const emailValid = validateField('email', formData.email);
+    const passwordValid = validateField('password', formData.password);
+    return emailValid && passwordValid;
+  };
+
   /* ================= HANDLERS ================= */
   const handleChange = (e) => {
     const { name, value } = e.target;
+    
+    // Clear field error when user starts typing
+    if (fieldErrors[name]) {
+      setFieldErrors(prev => ({ ...prev, [name]: '' }));
+    }
+    
     if (isPasswordReset) {
       setResetData(prev => ({
         ...prev,
@@ -172,17 +242,26 @@ const Login = () => {
   /* ================= LOGIN LOGIC ================= */
   const performLogin = async (email, password) => {
     setIsLoading(true);
+    setGlobalError('');
+    setErrorType('');
+    
     try {
       console.log(`🔐 Logging in to: ${API} with email: ${email}`);
 
-      const response = await axios.post(`${API}/auth/login`, { email, password });
+      // Use regular auth/login endpoint for all users (including superadmin)
+      const response = await axios.post(`${API}/auth/login`, 
+        { email, password },
+        {
+          headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json'
+          },
+          withCredentials: true // Important for httpOnly cookies
+        }
+      );
       console.log('✅ Login response:', response.data);
       
-      const { token, user, attemptInfo: responseAttemptInfo } = response.data;
-
-      if (!token || !user) {
-        throw new Error('Invalid response received from server');
-      }
+      const { token, user } = response.data;
 
       // Reset rate limiting state on successful login
       setIsBlocked(false);
@@ -190,88 +269,94 @@ const Login = () => {
       setAttemptInfo(null);
       setLoginAttempts(0);
 
-      // Store auth data
-      loginUser(token, user);
+      // Store user data in expected format for AuthContext
+      const userData = {
+        id: user.id,
+        email: user.email,
+        name: user.name,
+        role: user.role,
+        universityId: user.university_id
+      };
+      
+      // Use AuthContext loginUser function to properly store token and user
+      loginUser(token, userData);
+      
       console.log('✅ User logged in successfully:', user);
       toast.success('Login successful! Redirecting...');
 
-      // Navigate based on role
-      const role = user.role || 'student';
-      console.log(`🧭 Navigating for role: ${role}`);
-      
-      // Special redirect for portal@core5.co.in
-      if (email === 'portal@core5.co.in') {
-        console.log('🚪 Redirecting portal@core5.co.in to internal admin portal');
-        navigate('/internal-admin-portal');
-        return;
-      }
-      
-      switch (role) {
-        case 'superadmin':
-          navigate('/superadmin/dashboard');
-          break;
-        case 'admin':
-          navigate('/admin/dashboard');
-          break;
-        case 'mentor':
-        case 'teacher':
-          navigate('/mentor/dashboard');
-          break;
-        case 'accountant':
-          navigate('/accountant/dashboard');
-          break;
-        case 'storekeeper':
-          navigate('/storekeeper/dashboard');
-          break;
-        case 'vendor':
-          navigate('/vendor/dashboard');
-          break;
-        case 'student':
-        default:
-          navigate('/student/dashboard');
-          break;
+      // Navigate based on user role
+      if (user.role === 'superadmin') {
+        navigate('/superadmin/dashboard');
+      } else if (user.role === 'admin') {
+        navigate('/admin/dashboard');
+      } else if (user.role === 'mentor') {
+        navigate('/mentor/classrooms');
+      } else if (user.role === 'student') {
+        navigate('/student/dashboard');
+      } else if (user.role === 'storekeeper') {
+        navigate('/storekeeper/dashboard');
+      } else {
+        navigate('/dashboard'); // Default dashboard
       }
 
     } catch (err) {
       console.error('❌ Login error:', err);
       
-      // Handle rate limiting responses
-      if (err.response?.status === 429) {
-        const { blocked, remainingTime, attemptInfo: responseAttemptInfo } = err.response.data;
+      // Handle different error types
+      if (err.response) {
+        const status = err.response.status;
+        const errorMessage = err.response.data?.message || err.response.data?.error || 'Login failed';
         
-        if (blocked) {
-          setIsBlocked(true);
-          setBlockTimeRemaining(remainingTime);
-          toast.error(`Too many login attempts. Try again in ${remainingTime} seconds`);
+        // Handle specific error codes
+        if (status === 401) {
+          setGlobalError('Incorrect email or password. Please try again.');
+          setErrorType('invalid_credentials');
+          // Keep email field, clear password field
+          setFormData(prev => ({ ...prev, password: '' }));
+          setLoginAttempts(prev => prev + 1);
+        } else if (status === 400) {
+          setGlobalError(errorMessage);
+          setErrorType('validation_error');
+        } else if (status === 429) {
+          setGlobalError('Too many login attempts. Please wait a moment and try again.');
+          setErrorType('rate_limited');
+        } else {
+          setGlobalError(errorMessage);
+          setErrorType('server_error');
         }
-        
-        if (responseAttemptInfo) {
-          setAttemptInfo(responseAttemptInfo);
-          setLoginAttempts(responseAttemptInfo.ipAttempts);
-        }
+      } else if (err.code === 'ECONNREFUSED' || err.code === 'ENOTFOUND') {
+        setGlobalError('Unable to reach the server. Check your connection and try again.');
+        setErrorType('network_error');
       } else {
-        // Handle regular login errors
-        const errorMsg = err.response?.data?.message || err.message || 'Login failed';
-        toast.error(errorMsg);
-        
-        // Update attempt info if available
-        if (err.response?.data?.attemptInfo) {
-          setAttemptInfo(err.response.data.attemptInfo);
-          setLoginAttempts(err.response.data.attemptInfo.ipAttempts);
-        }
+        setGlobalError('Something went wrong. Please try again.');
+        setErrorType('unknown_error');
       }
     } finally {
       setIsLoading(false);
     }
   };
 
-  const handleDemoLogin = (email, password) => {
-    setFormData({ email, password });
-    performLogin(email, password);
-  };
-
+  
   const handleSubmit = (e) => {
     e.preventDefault();
+    
+    // Clear global error on new submission
+    setGlobalError('');
+    setErrorType('');
+    
+    // Client-side validation
+    if (!validateForm()) {
+      // Validation errors are already set in fieldErrors state
+      return;
+    }
+    
+    // Check for multiple failed attempts
+    if (loginAttempts >= 5) {
+      setGlobalError('Multiple failed attempts detected. Please double-check your credentials.');
+      setErrorType('multiple_attempts');
+      return;
+    }
+    
     performLogin(formData.email, formData.password);
   };
 
@@ -319,38 +404,97 @@ const Login = () => {
               {/* ================= FORM ================= */}
               {/* Login Form */}
               {!isPasswordReset ? (
-                <form onSubmit={handleSubmit} className="space-y-6">
+                <form onSubmit={handleSubmit} className="space-y-6" noValidate>
+                  {/* Global Error Banner */}
+                  {globalError && (
+                    <div 
+                      role="alert" 
+                      className="bg-red-500/20 border border-red-500/50 rounded-lg p-3 flex items-center justify-between"
+                    >
+                      <p className="text-red-200 text-sm font-medium">{globalError}</p>
+                      <button
+                        type="button"
+                        onClick={() => { setGlobalError(''); setErrorType(''); }}
+                        className="text-red-300 hover:text-red-100 ml-2"
+                        aria-label="Dismiss error"
+                      >
+                        ×
+                      </button>
+                    </div>
+                  )}
+
                   <div className="relative">
+                    <label htmlFor="email" className="sr-only">Email</label>
                     <Mail className="absolute left-3 top-3.5 text-white/60" />
                     <input
+                      id="email"
                       type="email"
                       name="email"
                       value={formData.email}
                       onChange={handleChange}
+                      onBlur={() => validateField('email', formData.email)}
                       required
+                      autoComplete="email"
                       placeholder={t('email_placeholder')}
-                      className="w-full pl-10 pr-4 py-3 rounded-xl bg-white/10 text-white border border-white/20 focus:outline-none"
+                      aria-describedby={fieldErrors.email ? 'email-error' : undefined}
+                      aria-invalid={fieldErrors.email ? 'true' : 'false'}
+                      className={`w-full pl-10 pr-4 py-3 rounded-xl bg-white/10 text-white border ${
+                        fieldErrors.email 
+                          ? 'border-red-500 focus:outline-none focus:ring-2 focus:ring-red-500' 
+                          : 'border-white/20 focus:outline-none focus:ring-2 focus:ring-blue-500'
+                      } transition-all duration-200`}
                     />
+                    {fieldErrors.email && (
+                      <p id="email-error" className="mt-1 text-red-300 text-xs font-medium">
+                        {fieldErrors.email}
+                      </p>
+                    )}
                   </div>
 
                   <div className="relative">
+                    <label htmlFor="password" className="sr-only">Password</label>
                     <Lock className="absolute left-3 top-3.5 text-white/60" />
                     <input
+                      id="password"
                       type={showPassword ? "text" : "password"}
                       name="password"
                       value={formData.password}
                       onChange={handleChange}
+                      onBlur={() => validateField('password', formData.password)}
                       required
+                      autoComplete="current-password"
                       placeholder={t('password_placeholder')}
-                      className="w-full pl-10 pr-10 py-3 rounded-xl bg-white/10 text-white border-white/20 focus:outline-none"
+                      aria-describedby={fieldErrors.password ? 'password-error' : undefined}
+                      aria-invalid={fieldErrors.password ? 'true' : 'false'}
+                      className={`w-full pl-10 pr-10 py-3 rounded-xl bg-white/10 text-white border ${
+                        fieldErrors.password 
+                          ? 'border-red-500 focus:outline-none focus:ring-2 focus:ring-red-500' 
+                          : 'border-white/20 focus:outline-none focus:ring-2 focus:ring-blue-500'
+                      } transition-all duration-200`}
                     />
                     <button
                       type="button"
                       onClick={togglePasswordVisibility}
                       className="absolute right-3 top-3.5 text-white/60 hover:text-white/80"
+                      aria-label={showPassword ? 'Hide password' : 'Show password'}
                     >
                       {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
                     </button>
+                    {fieldErrors.password && (
+                      <p id="password-error" className="mt-1 text-red-300 text-xs font-medium">
+                        {fieldErrors.password}
+                      </p>
+                    )}
+                    
+                    {/* Password Debug Info */}
+                    {formData.password && (
+                      <div className="text-xs text-white/60 mt-1">
+                        <span>Length: {formData.password.length}</span>
+                        {formData.password.includes('#') && <span className="ml-2">Contains #</span>}
+                        {formData.password.includes('$') && <span className="ml-2">Contains $</span>}
+                        {formData.password.includes('@') && <span className="ml-2">Contains @</span>}
+                      </div>
+                    )}
                   </div>
 
                   <button
@@ -361,7 +505,7 @@ const Login = () => {
                     {isLoading ? (
                       <div className="flex items-center justify-center">
                         <div className="animate-spin rounded-full h-5 w-5 border-t-2 border-b-2 border-white border-t-transparent"></div>
-                        <span className="ml-2">{t('logging_in')}</span>
+                        <span className="ml-2">Signing in...</span>
                       </div>
                     ) : isBlocked ? (
                       <span className="flex items-center">
@@ -571,103 +715,7 @@ const Login = () => {
             </div>
           )}
 
-            {/* ================= DEMO CREDENTIALS ================= */}
-            <div className="mt-6 p-4 bg-black/20 rounded-lg">
-              <p className="text-white/80 text-sm font-semibold mb-3">{t('demo_accounts')}</p>
-              <div className="space-y-2">
-                <button
-                  onClick={() => handleDemoLogin('superadmin@core5.com', 'superadmin123')}
-                  className="w-full text-left p-2 bg-red-600/20 hover:bg-red-600/30 rounded-lg transition-colors group"
-                >
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-white text-sm font-medium">Superadmin</p>
-                      <p className="text-white/60 text-xs">superadmin@core5.com / superadmin123</p>
-                    </div>
-                    <span className="text-red-400 text-xs group-hover:text-red-300">{t('click_to_login')}</span>
-                  </div>
-                </button>
-                
-                <button
-                  onClick={() => handleDemoLogin('admin@gmail.com', '12345678')}
-                  className="w-full text-left p-2 bg-blue-600/20 hover:bg-blue-600/30 rounded-lg transition-colors group"
-                >
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-white text-sm font-medium">{t('admin_role')}</p>
-                      <p className="text-white/60 text-xs">admin@gmail.com / 12345678</p>
-                    </div>
-                    <span className="text-blue-400 text-xs group-hover:text-blue-300">{t('click_to_login')}</span>
-                  </div>
-                </button>
-                
-                <button
-                  onClick={() => handleDemoLogin('mentor@gmail.com', '12345678')}
-                  className="w-full text-left p-2 bg-green-600/20 hover:bg-green-600/30 rounded-lg transition-colors group"
-                >
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-white text-sm font-medium">{t('mentor_role')}</p>
-                      <p className="text-white/60 text-xs">mentor@gmail.com / 12345678</p>
-                    </div>
-                    <span className="text-green-400 text-xs group-hover:text-green-300">{t('click_to_login')}</span>
-                  </div>
-                </button>
-                
-                <button
-                  onClick={() => handleDemoLogin('student@gmail.com', '12345678')}
-                  className="w-full text-left p-2 bg-purple-600/20 hover:bg-purple-600/30 rounded-lg transition-colors group"
-                >
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-white text-sm font-medium">{t('student_role')}</p>
-                      <p className="text-white/60 text-xs">student@gmail.com / 12345678</p>
-                    </div>
-                    <span className="text-purple-400 text-xs group-hover:text-purple-300">{t('click_to_login')}</span>
-                  </div>
-                </button>
-                
-                <button
-                  onClick={() => handleDemoLogin('accountant@demo.com', '12345678')}
-                  className="w-full text-left p-2 bg-purple-600/20 hover:bg-purple-600/30 rounded-lg transition-colors group"
-                >
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-white text-sm font-medium">{t('accountant_role')}</p>
-                      <p className="text-white/60 text-xs">accountant@demo.com / 12345678</p>
-                    </div>
-                    <span className="text-purple-400 text-xs group-hover:text-purple-300">{t('click_to_login')}</span>
-                  </div>
-                </button>
-                
-                <button
-                  onClick={() => handleDemoLogin('storekeeper@demo.com', '12345678')}
-                  className="w-full text-left p-2 bg-orange-600/20 hover:bg-orange-600/30 rounded-lg transition-colors group"
-                >
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-white text-sm font-medium">{t('storekeeper_role')}</p>
-                      <p className="text-white/60 text-xs">storekeeper@demo.com / 12345678</p>
-                    </div>
-                    <span className="text-orange-400 text-xs group-hover:text-orange-300">{t('click_to_login')}</span>
-                  </div>
-                </button>
-                
-                <button
-                  onClick={() => handleDemoLogin('vendor@test.com', '12345678')}
-                  className="w-full text-left p-2 bg-teal-600/20 hover:bg-teal-600/30 rounded-lg transition-colors group"
-                >
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-white text-sm font-medium">Vendor</p>
-                      <p className="text-white/60 text-xs">vendor@test.com / 12345678</p>
-                    </div>
-                    <span className="text-teal-400 text-xs group-hover:text-teal-300">{t('click_to_login')}</span>
-                  </div>
-                </button>
-                </div>
-              </div>
-            </div>
+                        </div>
 
           </div>
         </div>

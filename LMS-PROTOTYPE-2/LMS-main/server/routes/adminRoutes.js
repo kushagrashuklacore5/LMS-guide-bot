@@ -13,6 +13,7 @@ const {
   getAllUsers,
   getStudents,
   getAdminDashboard,
+  getUserHierarchy,
 } = require("../controllers/user-controller");
 const {
   getAllClassrooms,
@@ -85,6 +86,17 @@ router.get(
   authMiddleware,
   adminOnly,
   getAllUsers
+);
+
+/**
+ * @route   GET /api/admin/user-hierarchy
+ * @desc    Get user hierarchy tree
+ */
+router.get(
+  "/user-hierarchy",
+  authMiddleware,
+  adminOnly,
+  getUserHierarchy
 );
 
 /**

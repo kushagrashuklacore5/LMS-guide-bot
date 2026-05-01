@@ -97,9 +97,9 @@ const Timetable = () => {
 
   if (loading) {
     return (
-      <StudentLayout>
+      <StudentLayout><div className="flex-1 overflow-y-auto scrollable-content p-3 sm:p-4 md:p-6">
         <div className="p-8 text-center text-gray-500">{t('loading_courses')}...</div>
-      </StudentLayout>
+      </div></StudentLayout>
     );
   }
 

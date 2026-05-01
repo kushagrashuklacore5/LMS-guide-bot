@@ -1,4 +1,4 @@
-const db = require('./config/sqlite-db');
+const db = require('config/database-switch');
 const jwt = require('jsonwebtoken');
 const jwtSecret = process.env.JWT_SECRET || 'default_jwt_secret_key';
 

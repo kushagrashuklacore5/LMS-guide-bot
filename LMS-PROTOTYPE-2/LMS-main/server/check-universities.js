@@ -1,5 +1,5 @@
 // Check universities and their adminId
-const db = require('./config/sqlite-db');
+const db = require('config/database-switch');
 
 function checkUniversities() {
   console.log('🔍 Checking Universities and Admin IDs\n');

@@ -1,4 +1,4 @@
-const db = require('./config/sqlite-db');
+const db = require('config/database-switch');
 
 async function checkDemoAccountsDetailed() {
   console.log('=== DETAILED DEMO ACCOUNTS CHECK ===');

@@ -3,7 +3,7 @@ import { useAuth } from '../../auth/auth';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { toast } from 'react-toastify';
-import { Users, Clock, Copy, RefreshCw, Eye, EyeOff, CheckCircle, XCircle, AlertCircle } from 'lucide-react';
+import { Users, Clock, Copy, RefreshCw, Eye, EyeOff, CheckCircle, XCircle, AlertCircle, Trash } from 'lucide-react';
 
 const InternalAdminPortal = () => {
   const { user, token, API: contextAPI } = useAuth();
@@ -65,79 +65,66 @@ const InternalAdminPortal = () => {
     try {
       setLoading(true);
       
+      console.log('=== Starting fetchSuperadmins ===');
+      console.log('API URL:', API);
+      console.log('Token available:', !!token);
+      console.log('User:', user);
+      
       // First test if API is accessible
-      console.log('🧪 Testing API connection...');
+      console.log('Testing API connection...');
       try {
         const testResponse = await axios.get(`${API}/superadmin/internal/test`);
-        console.log('✅ API test successful:', testResponse.data);
+        console.log('API test successful:', testResponse.data);
       } catch (testError) {
-        console.error('❌ API test failed:', testError);
-        toast.error('API connection failed: ' + testError.message);
+        console.error('API test failed:', testError);
+        console.error('Test error details:', {
+          message: testError.message,
+          code: testError.code,
+          response: testError.response?.data,
+          status: testError.response?.status
+        });
+        toast.error(`API connection failed: ${testError.message}`);
+        setLoading(false);
         return;
       }
       
       // Now fetch superadmins
+      console.log('Fetching superadmins...');
       const response = await axios.get(`${API}/superadmin/internal/superadmins`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       
-      console.log('🔍 API Response:', response.data);
+      console.log('API Response:', response.data);
       
       if (response.data.success && response.data.data) {
-        console.log('📊 Superadmins received:', response.data.data.length);
+        console.log('Superadmins received:', response.data.data.length);
         
-        // For each superadmin, fetch their exact timer from the subscription API
-        const superadminsWithTimers = await Promise.all(
-          response.data.data.map(async (superadmin) => {
-            try {
-              // Get the exact timer from the subscription API (same as superadmin frontend)
-              const subResponse = await axios.get(`${API}/subscriptions/current`, {
-                headers: { 
-                  Authorization: `Bearer ${token}`,
-                  'X-User-ID': superadmin.id // Pass the superadmin ID to get their subscription
-                }
-              });
-              
-              const timerData = subResponse.data.subscription;
-              console.log(`⏰ Timer for ${superadmin.email}:`, timerData);
-              
-              // Use the exact same calculation as SuperAdminLayout
-              const remainingSeconds = timerData.remainingSeconds || 0;
-              const days = Math.floor(remainingSeconds / 86400);
-              const hours = Math.floor((remainingSeconds % 86400) / 3600);
-              const minutes = Math.floor((remainingSeconds % 3600) / 60);
-              const seconds = remainingSeconds % 60;
-              
-              return {
-                ...superadmin,
-                exactTimer: {
-                  remainingSeconds,
-                  days,
-                  hours,
-                  minutes,
-                  seconds,
-                  text: `${days}d ${hours}h ${minutes}m ${seconds}s left`
-                }
-              };
-            } catch (timerError) {
-              console.error(`❌ Timer fetch error for ${superadmin.email}:`, timerError);
-              // Fallback to original calculation
-              return superadmin;
-            }
-          })
-        );
+        // Add simple timer calculation without extra API calls
+        const superadminsWithTimers = response.data.data.map(superadmin => ({
+          ...superadmin,
+          exactTimer: superadmin.expires_at ? calculateTimeRemaining(superadmin.expires_at) : null
+        }));
         
-        console.log('👤 Superadmins with timers:', superadminsWithTimers);
+        console.log('Superadmins with timers:', superadminsWithTimers);
         setSuperadmins(superadminsWithTimers);
-        toast.success(`Loaded ${superadminsWithTimers.length} superadmins with exact timers`);
+        setLoading(false);
+        toast.success(`Loaded ${superadminsWithTimers.length} superadmins`);
       } else {
-        console.error('❌ Invalid response format:', response.data);
+        console.error('Invalid response format:', response.data);
         setSuperadmins([]);
+        setLoading(false);
         toast.error('Invalid response format from server');
       }
     } catch (error) {
-      console.error('❌ Fetch error:', error);
-      toast.error('Failed to fetch superadmins: ' + (error.response?.data?.message || error.message));
+      console.error('=== Fetch Error Details ===');
+      console.error('Error:', error);
+      console.error('Error message:', error.message);
+      console.error('Error code:', error.code);
+      console.error('Error response:', error.response?.data);
+      console.error('Error status:', error.response?.status);
+      
+      const errorMessage = error.response?.data?.message || error.message || 'Unknown error';
+      toast.error(`Failed to fetch superadmins: ${errorMessage}`);
       setSuperadmins([]);
     } finally {
       setLoading(false);
@@ -168,12 +155,21 @@ const InternalAdminPortal = () => {
       fetchSuperadmins();
       
       // Show generated password
-      const newSuperadmin = response.data;
-      setTimeout(() => {
-        toast.success(`Password: ${newSuperadmin.generatedPassword}`, {
-          autoClose: 10000
-        });
-      }, 1000);
+      console.log('Create superadmin response:', response.data);
+      const newSuperadmin = response.data.data || response.data;
+      console.log('New superadmin data:', newSuperadmin);
+      
+      if (newSuperadmin && newSuperadmin.generatedPassword) {
+        setTimeout(() => {
+          toast.success(`Password: ${newSuperadmin.generatedPassword}`, {
+            autoClose: 10000
+          });
+        }, 1000);
+      } else {
+        console.error('Generated password not found in response');
+        console.error('Response structure:', response);
+        toast.error('Generated password not available in response');
+      }
       
     } catch (error) {
       toast.error(error.response?.data?.message || 'Failed to create superadmin');
@@ -207,6 +203,32 @@ const InternalAdminPortal = () => {
       fetchSuperadmins();
     } catch (error) {
       toast.error('Failed to reset password');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleDeleteSuperadmin = async (superadminId, email) => {
+    if (!window.confirm(`Are you sure you want to delete superadmin ${email}? This action cannot be undone.`)) {
+      return;
+    }
+
+    try {
+      setLoading(true);
+      const response = await axios.post(`${API}/superadmin/internal/delete-superadmin`, {
+        superadminId: superadminId
+      }, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      
+      if (response.data.success) {
+        toast.success('Superadmin deleted successfully!');
+        fetchSuperadmins();
+      } else {
+        toast.error(response.data.message || 'Failed to delete superadmin');
+      }
+    } catch (error) {
+      toast.error('Failed to delete superadmin');
     } finally {
       setLoading(false);
     }
@@ -528,18 +550,11 @@ const InternalAdminPortal = () => {
                                   )}
                                 </button>
                                 <button
-                                  onClick={() => handleResetPassword(superadmin.id)}
-                                  className="text-yellow-600 hover:text-yellow-900"
-                                  title="Reset Password"
-                                >
-                                  <RefreshCw className="w-4 h-4" />
-                                </button>
-                                <button
-                                  onClick={() => handleDisableUser(superadmin.id)}
+                                  onClick={() => handleDeleteSuperadmin(superadmin.id, superadmin.email)}
                                   className="text-red-600 hover:text-red-900"
-                                  title="Disable User"
+                                  title="Delete Superadmin"
                                 >
-                                  <XCircle className="w-4 h-4" />
+                                  <Trash className="w-4 h-4" />
                                 </button>
                               </div>
                             </td>

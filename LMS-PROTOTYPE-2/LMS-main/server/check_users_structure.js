@@ -10,7 +10,7 @@ const db = new sqlite3.Database(path.join(__dirname, 'data', 'lms-database.sqlit
 });
 
 console.log('\n=== Checking users table structure ===');
-db.all('PRAGMA table_info(users)', (err, columns) => {
+db.all('SELECT column_name, data_type FROM information_schema.columns WHERE table_name = 'users)', (err, columns) => {
   if (err) {
     console.error('Error:', err);
   } else {
@@ -21,7 +21,7 @@ db.all('PRAGMA table_info(users)', (err, columns) => {
   }
   
   console.log('\n=== Checking vendors table structure ===');
-  db.all('PRAGMA table_info(vendors)', (err, vendorColumns) => {
+  db.all('SELECT column_name, data_type FROM information_schema.columns WHERE table_name = 'vendors)', (err, vendorColumns) => {
     if (err) {
       console.error('Error:', err);
     } else {

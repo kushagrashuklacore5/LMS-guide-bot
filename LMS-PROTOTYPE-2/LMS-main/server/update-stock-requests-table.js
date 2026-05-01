@@ -1,4 +1,4 @@
-const db = require('./config/sqlite-db');
+const db = require('config/database-switch');
 
 // Add missing columns to stock_requests table
 const columns = [

@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from '../../auth/auth';
 import { useTranslation } from '../../context/TranslationContext';
 import MentorLayout from '../../components/MentorLayout';
@@ -10,11 +10,13 @@ const CreateCourse = () => {
   const navigate = useNavigate();
   const { token, API } = useAuth();
   const { t } = useTranslation();
+  const location = useLocation();
 
   const [courses, setCourses] = useState([]);
   const [mentors, setMentors] = useState([]);
   const [students, setStudents] = useState([]);                 // ✅ ADD
   const [selectedStudents, setSelectedStudents] = useState([]); // ✅ ADD
+  const [classroomContext, setClassroomContext] = useState(null);
 
   const [selectedMentor, setSelectedMentor] = useState("");
   const [loading, setLoading] = useState(true);
@@ -29,10 +31,28 @@ const CreateCourse = () => {
     duration: "",
   });
 
+  // Handle classroom context from navigation
+  useEffect(() => {
+    if (location.state?.classroomId) {
+      setClassroomContext({
+        classroomId: location.state.classroomId,
+        classroomName: location.state.classroomName
+      });
+    }
+  }, [location.state]);
+
   useEffect(() => {
     getCourses();
     getMentors();
     getStudents(); // ✅ ADD
+  }, []);
+
+  // Set default mentor to current user if they are a mentor
+  useEffect(() => {
+    const { user } = JSON.parse(localStorage.getItem('auth') || '{}');
+    if (user && user.role === 'mentor' && user.id) {
+      setSelectedMentor(user.id.toString());
+    }
   }, []);
 
   /* ================= UNWRAP RESPONSE ================= */
@@ -124,8 +144,16 @@ const CreateCourse = () => {
   const saveCourse = async (e) => {
     e.preventDefault();
 
+    console.log('📚 [VALIDATION DEBUG] Form data:', formData);
+    console.log('📚 [VALIDATION DEBUG] Selected mentor:', selectedMentor);
+    console.log('📚 [VALIDATION DEBUG] Title valid:', !!formData.title);
+    console.log('📚 [VALIDATION DEBUG] Category valid:', !!formData.category);
+    console.log('📚 [VALIDATION DEBUG] Duration valid:', !!formData.duration);
+    console.log('📚 [VALIDATION DEBUG] Mentor valid:', !!selectedMentor);
+
     if (!formData.title || !formData.category || !formData.duration || !selectedMentor) {
       toast.error('Please fill all required fields');
+      console.log('📚 [VALIDATION DEBUG] Validation failed - missing required fields');
       return;
     }
 
@@ -138,26 +166,38 @@ const CreateCourse = () => {
 
       const method = editingCourse ? 'PUT' : 'POST';
 
+      const requestData = {
+        ...formData,
+        mentorId: selectedMentor,
+        studentIds: selectedStudents,
+        classroomId: classroomContext?.classroomId,
+      };
+
+      console.log('📚 [FRONTEND DEBUG] Course data being sent:', requestData);
+      console.log('📚 [FRONTEND DEBUG] API URL:', url);
+      console.log('📚 [FRONTEND DEBUG] Method:', method);
+      console.log('📚 [FRONTEND DEBUG] Token available:', !!token);
+
       const response = await fetch(url, {
         method,
         headers: {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify({
-          ...formData,
-          mentorId: selectedMentor, // ✅ FIX: Use mentorId instead of courseTeacher
-          studentIds: selectedStudents, // ✅ ADD
-        }),
+        body: JSON.stringify(requestData),
       });
 
-      if (!response.ok) throw new Error();
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Failed to save course');
+      }
 
       toast.success(editingCourse ? t('course_updated_successfully') : t('course_created_successfully'));
       getCourses();
       resetForm();
-    } catch {
-      toast.error(t('failed_to_save_course'));
+    } catch (error) {
+      console.error('❌ Course save error:', error);
+      toast.error(`Failed to save course: ${error.message}`);
     } finally {
       setSaving(false);
     }
@@ -188,6 +228,13 @@ const CreateCourse = () => {
           <div>
             <h1 className="text-3xl font-bold">{t('course_management')}</h1>
             <p className="text-gray-600">{t('manage_courses')}</p>
+            {classroomContext && (
+              <div className="mt-2 p-2 bg-blue-50 rounded-lg">
+                <span className="text-sm text-blue-800 font-medium">
+                  📍 Creating course for: {classroomContext.classroomName}
+                </span>
+              </div>
+            )}
           </div>
           <button onClick={() => navigate('/mentor/dashboard')} className="border px-4 py-2 rounded flex gap-2">
             <ArrowLeft size={18} /> {t('back')}
@@ -218,7 +265,7 @@ const CreateCourse = () => {
                 className="border px-3 py-2 rounded" required>
                 <option value="">{t('assign_course_teacher')}</option>
                 {mentors.map(m => (
-                  <option key={m.id} value={m.id}>{m.name}</option>
+                  <option key={m._id} value={m._id}>{m.name}</option>
                 ))}
               </select>
 

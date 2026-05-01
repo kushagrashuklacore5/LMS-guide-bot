@@ -24,4 +24,47 @@ axiosInstance.interceptors.request.use((config) => {
   return config;
 });
 
+// Add response interceptor for refresh token handling
+axiosInstance.interceptors.response.use(
+  (response) => {
+    return response;
+  },
+  async (error) => {
+    const originalRequest = error.config;
+
+    // If error is 401 and it's not the refresh token request itself
+    if (error.response?.status === 401 && !originalRequest._retry && !originalRequest.url.includes('/superadmin/refresh-token')) {
+      originalRequest._retry = true;
+
+      try {
+        // Attempt to refresh the token
+        const refreshResponse = await axiosInstance.post('/superadmin/refresh-token', {}, {
+          withCredentials: true // Important for httpOnly cookies
+        });
+
+        if (refreshResponse.data.success) {
+          const newToken = refreshResponse.data.data.accessToken;
+          
+          // Update stored token
+          localStorage.setItem('token', newToken);
+          
+          // Update authorization header for the original request
+          originalRequest.headers['Authorization'] = `Bearer ${newToken}`;
+          
+          // Retry the original request with the new token
+          return axiosInstance(originalRequest);
+        }
+      } catch (refreshError) {
+        // Refresh failed, clear auth state and redirect to login
+        localStorage.removeItem('token');
+        localStorage.removeItem('user');
+        window.location.href = '/login';
+        return Promise.reject(refreshError);
+      }
+    }
+
+    return Promise.reject(error);
+  }
+);
+
 export default axiosInstance;

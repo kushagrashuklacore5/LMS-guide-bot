@@ -47,7 +47,7 @@ try {
     let checkedTables = 0;
     
     tables.forEach(table => {
-      db.get(`SELECT name FROM sqlite_master WHERE type='table' AND name=?`, [table], (err, row) => {
+      db.get(`SELECT table_name FROM information_schema.tables WHERE table_schema = 'public' AND name=?`, [table], (err, row) => {
         if (err) {
           console.error(`Error checking table ${table}:`, err.message);
         } else if (row) {

@@ -1,5 +1,7 @@
 const axios = require('axios');
 
+
+
 const LIBRETRA_API_URL = 'http://localhost:5000/translate';
 
 class BilingualDbService {

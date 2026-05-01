@@ -1,7 +1,15 @@
 const express = require('express');
 const router = express.Router();
-const db = require('../config/sqlite-db');
 const authMiddleware = require('../middleware/authMiddleware');
+
+
+
+
+// Helper function to get database from request context or fallback to master
+function getDatabaseFromRequest(req) {
+  return req.tenant?.database || require('../config/database-switch');
+}
+
 
 /**
  * GET /api/stock-requests/templates
@@ -17,7 +25,7 @@ router.get('/', authMiddleware, (req, res) => {
     }
 
     // Get user's university_id
-    db.get('SELECT university_id FROM users WHERE id = ?', [userId], (err, user) => {
+    getDatabaseFromRequest(req).get('SELECT university_id FROM users WHERE id = ?', [userId], (err, user) => {
       if (err) {
         console.error('Get user error:', err);
         return res.status(500).json({ success: false, message: 'Database error' });
@@ -49,7 +57,7 @@ router.get('/', authMiddleware, (req, res) => {
 
       query += ' ORDER BY rt.usage_count DESC, rt.created_at DESC';
 
-      db.all(query, params, (err, templates) => {
+      getDatabaseFromRequest(req).all(query, params, (err, templates) => {
         if (err) {
           console.error('Get templates error:', err);
           return res.status(500).json({ success: false, message: 'Failed to fetch templates' });
@@ -87,7 +95,7 @@ router.get('/:id', authMiddleware, (req, res) => {
     }
 
     // Get user's university_id
-    db.get('SELECT university_id FROM users WHERE id = ?', [userId], (err, user) => {
+    getDatabaseFromRequest(req).get('SELECT university_id FROM users WHERE id = ?', [userId], (err, user) => {
       if (err) {
         console.error('Get user error:', err);
         return res.status(500).json({ success: false, message: 'Database error' });
@@ -97,7 +105,7 @@ router.get('/:id', authMiddleware, (req, res) => {
         return res.status(404).json({ success: false, message: 'User not found' });
       }
 
-      db.get(
+      getDatabaseFromRequest(req).get(
         `SELECT rt.*, u.name as created_by_name
          FROM request_templates rt
          LEFT JOIN users u ON rt.created_by = u.id
@@ -120,7 +128,7 @@ router.get('/:id', authMiddleware, (req, res) => {
           };
 
           // Increment usage count
-          db.run(
+          getDatabaseFromRequest(req).run(
             'UPDATE request_templates SET usage_count = usage_count + 1 WHERE id = ?',
             [id]
           );
@@ -156,7 +164,7 @@ router.post('/', authMiddleware, (req, res) => {
     }
 
     // Get user's university_id
-    db.get('SELECT university_id FROM users WHERE id = ?', [userId], (err, user) => {
+    getDatabaseFromRequest(req).get('SELECT university_id FROM users WHERE id = ?', [userId], (err, user) => {
       if (err) {
         console.error('Get user error:', err);
         return res.status(500).json({ success: false, message: 'Database error' });
@@ -167,7 +175,7 @@ router.post('/', authMiddleware, (req, res) => {
       }
 
       // Create template
-      db.run(
+      getDatabaseFromRequest(req).run(
         `INSERT INTO request_templates (
           university_id, name, description, category, items, created_by, is_public
         ) VALUES (?, ?, ?, ?, ?, ?, ?)`,
@@ -210,7 +218,7 @@ router.put('/:id', authMiddleware, (req, res) => {
     }
 
     // Get user's university_id
-    db.get('SELECT university_id FROM users WHERE id = ?', [userId], (err, user) => {
+    getDatabaseFromRequest(req).get('SELECT university_id FROM users WHERE id = ?', [userId], (err, user) => {
       if (err) {
         console.error('Get user error:', err);
         return res.status(500).json({ success: false, message: 'Database error' });
@@ -221,7 +229,7 @@ router.put('/:id', authMiddleware, (req, res) => {
       }
 
       // Update template (only creator can update)
-      db.run(
+      getDatabaseFromRequest(req).run(
         `UPDATE request_templates SET 
           name = ?, description = ?, category = ?, items = ?, is_public = ?
         WHERE id = ? AND university_id = ? AND created_by = ?`,
@@ -266,7 +274,7 @@ router.delete('/:id', authMiddleware, (req, res) => {
     }
 
     // Get user's university_id
-    db.get('SELECT university_id FROM users WHERE id = ?', [userId], (err, user) => {
+    getDatabaseFromRequest(req).get('SELECT university_id FROM users WHERE id = ?', [userId], (err, user) => {
       if (err) {
         console.error('Get user error:', err);
         return res.status(500).json({ success: false, message: 'Database error' });
@@ -277,7 +285,7 @@ router.delete('/:id', authMiddleware, (req, res) => {
       }
 
       // Delete template (only creator can delete)
-      db.run(
+      getDatabaseFromRequest(req).run(
         'DELETE FROM request_templates WHERE id = ? AND university_id = ? AND created_by = ?',
         [id, user.university_id, userId],
         function(err) {

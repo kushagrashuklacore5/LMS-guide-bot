@@ -1,4 +1,4 @@
-const db = require("../config/sqlite-db");
+const db = require("../config/database-switch");
 const bcrypt = require("bcryptjs");
 const {
   getSuperadminSubscription,
@@ -22,18 +22,7 @@ const createUniversityWithAdmin = async (req, res) => {
     // ✅ normalize email (IMPORTANT)
     adminEmail = adminEmail.trim().toLowerCase();
 
-    // Check quota first
-    const universityCount = await countUniversitiesForSuperadmin();
-    const subscription = await getSuperadminSubscription("superadmin-1");
-    
-    // Check university quota
-    if (checkUniversityQuota(subscription.planType, universityCount)) {
-      return res.status(400).json({
-        message: `University limit reached (${subscription.planName} plan allows up to ${
-          subscription.planType === 'free' ? 1 : subscription.planType === 'standard' ? 2 : 'unlimited'
-        } universities)`
-      });
-    }
+    console.log('🏛️ Creating university with admin:', { universityName, adminEmail });
 
     // Check if admin already exists
     const existingAdmin = await new Promise((resolve, reject) => {
@@ -55,7 +44,8 @@ const createUniversityWithAdmin = async (req, res) => {
     const universityId = await new Promise((resolve, reject) => {
       db.run(`
         INSERT INTO universities (name, area, createdAt, updatedAt)
-        VALUES (?, ?, datetime('now'), datetime('now'))
+        VALUES (?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
+        RETURNING id
       `, [universityName, area], function(err) {
         if (err) reject(err);
         else resolve(this.lastID);
@@ -65,8 +55,9 @@ const createUniversityWithAdmin = async (req, res) => {
     // Now create admin user WITH university_id
     const adminId = await new Promise((resolve, reject) => {
       db.run(`
-        INSERT INTO users (name, email, password, role, isApproved, university_id, createdAt, updatedAt)
-        VALUES (?, ?, ?, ?, ?, ?, datetime('now'), datetime('now'))
+        INSERT INTO users (name, email, password, role, isApproved, university_id, created_at, updated_at)
+        VALUES (?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
+        RETURNING id
       `, [adminName, adminEmail, hashedPassword, "admin", 1, universityId], function(err) {
         if (err) reject(err);
         else resolve(this.lastID);
@@ -126,11 +117,13 @@ const createUser = async (req, res) => {
       return res.status(400).json({ message: "University not found" });
     }
 
+    console.log('🔍 DEBUG: About to call getSuperadminSubscription');
     // Get subscription to check plan type
-    const subscription = await getSuperadminSubscription("superadmin-1");
+    const subscription = await getSuperadminSubscription(req, "superadmin-1");
+    console.log('🔍 DEBUG: Subscription result:', subscription);
     
     // Check per-role quota (especially for Free plan: 1 admin, 1 accountant, 1 storekeeper)
-    const roleCount = await countUsersByRoleInUniversity(universityId, role);
+    const roleCount = await countUsersByRoleInUniversity(req, universityId, role);
     const roleQuotaCheck = checkRoleQuotaInUniversity(subscription.planType, role, roleCount);
     
     if (!roleQuotaCheck.allowed) {
@@ -157,8 +150,9 @@ const createUser = async (req, res) => {
     // Create user WITH university_id
     const userId = await new Promise((resolve, reject) => {
       db.run(`
-        INSERT INTO users (name, email, password, role, isApproved, university_id, createdAt, updatedAt)
-        VALUES (?, ?, ?, ?, ?, ?, datetime('now'), datetime('now'))
+        INSERT INTO users (name, email, password, role, isApproved, university_id, created_at, updated_at)
+        VALUES (?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
+        RETURNING id
       `, [name, email, hashedPassword, role, 1, universityId], function(err) {
         if (err) reject(err);
         else resolve(this.lastID);
@@ -225,9 +219,9 @@ const getAllUniversities = (req, res) => {
 const getAllUsers = (req, res) => {
   try {
     db.all(`
-      SELECT id, name, email, role, isApproved, createdAt, updatedAt
+      SELECT id, name, email, role, isApproved, created_at, updated_at
       FROM users
-      ORDER BY createdAt DESC
+      ORDER BY created_at DESC
     `, [], (err, users) => {
       if (err) {
         console.error("GET USERS ERROR:", err);

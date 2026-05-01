@@ -1,11 +1,11 @@
 const fs = require('fs');
 const path = require('path');
-const db = require('../config/sqlite-db');
+const db = require('../config/database-switch');
 const translationService = require('../services/translationService');
 
 async function exportTable(tableName, outDir, lang='ar'){
   const pragma = await new Promise((resolve, reject) => {
-    db.all(`PRAGMA table_info(${tableName})`, (err, cols) => {
+    db.all(`SELECT column_name, data_type FROM information_schema.columns WHERE table_name = '${tableName})`, (err, cols) => {
       if (err) return resolve([]);
       resolve(cols.map(c=>c.name));
     });
@@ -119,7 +119,7 @@ async function exportAll(){
   try{
     await translationService.isServiceAvailable();
     const tables = await new Promise((resolve,reject)=>{
-      db.all("SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%'", (err, rows)=>{
+      db.all("SELECT table_name FROM information_schema.tables WHERE table_schema = 'public' AND name NOT LIKE 'sqlite_%'", (err, rows)=>{
         if (err) return resolve([]);
         resolve(rows.map(r=>r.name));
       });

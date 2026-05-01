@@ -1,4 +1,4 @@
-const db = require('./config/sqlite-db');
+const db = require('config/database-switch');
 
 // Test 1: Check users table
 console.log('\n=== TEST 1: Get All Users ===');

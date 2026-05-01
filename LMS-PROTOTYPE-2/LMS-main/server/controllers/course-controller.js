@@ -1,9 +1,12 @@
-const db = require("../config/sqlite-db");
+const tenantConnectionManager = require('../config/tenant-connection-manager');
+const db = require('../config/database-switch');
 const BilingualDataService = require("../services/BilingualDataService");
 const {
   getSuperadminSubscription,
   checkMentorCourseQuotaPerClass
 } = require("../helpers/quotaHelper");
+
+
 
 // Helper function to add _id field to courses for frontend compatibility
 const mapCourse = (course) => {
@@ -54,6 +57,104 @@ const createCourse = async (req, res) => {
 
     let assignedMentorId = mentorId || req.user.userId;
     const universityId = req.user?.universityId || 1;
+
+    // Helper functions inside createCourse
+    const autoAssignStudentsFromClassroom = (courseId, classroomId, callback) => {
+      console.log(`\n🔗 === AUTO-ASSIGN STUDENTS FROM CLASSROOM START ===`);
+      console.log(`🔗 Course ID: ${courseId}, Classroom ID: ${classroomId}`);
+      
+      db.all(
+        "SELECT sca.studentId FROM student_classroom_assignment sca WHERE sca.classroomId = ?",
+        [classroomId],
+        (err, students) => {
+          if (err) {
+            console.error(`❌ Error fetching students from classroom:`, err);
+            if (callback) callback();
+            console.log(`🔗 === AUTO-ASSIGN STUDENTS FROM CLASSROOM END (ERROR) ===\n`);
+            return;
+          }
+
+          console.log(`🔗 Students found in classroom: ${students ? students.length : 0}`);
+          
+          if (!students || students.length === 0) {
+            console.warn(`⚠️ No students found in classroom ${classroomId} - skipping auto-assign`);
+            if (callback) callback();
+            console.log(`🔗 === AUTO-ASSIGN STUDENTS FROM CLASSROOM END (NO STUDENTS) ===\n`);
+            return;
+          }
+
+          console.log(`🔗 Students to assign:`, students.map(s => s.studentId));
+
+          db.run(
+            `CREATE TABLE IF NOT EXISTS course_students (
+              id INTEGER PRIMARY KEY AUTOINCREMENT,
+              courseId INTEGER NOT NULL,
+              studentId TEXT NOT NULL,
+              assignedAt DATETIME DEFAULT CURRENT_TIMESTAMP,
+              UNIQUE(courseId, studentId)
+            )`,
+            () => {
+              const stmt = db.prepare(
+                "INSERT OR IGNORE INTO course_students (courseId, studentId) VALUES (?, ?)"
+              );
+
+              let assignedCount = 0;
+              students.forEach((student) => {
+                stmt.run([courseId, student.studentId], function(runErr) {
+                  if (runErr) {
+                    console.error(`❌ Error assigning student ${student.studentId}:`, runErr);
+                  } else {
+                    assignedCount++;
+                    console.log(`✅ Assigned student ${student.studentId} to course ${courseId}`);
+                  }
+                });
+              });
+
+              stmt.finalize(() => {
+                console.log(`🔗 === AUTO-ASSIGN STUDENTS FROM CLASSROOM END (SUCCESS) ===\n`);
+                console.log(`🔗 Total students assigned: ${assignedCount}`);
+                if (callback) callback(assignedCount);
+              });
+            }
+          );
+        }
+      );
+    };
+
+    const autoAssignSpecificStudents = (courseId, studentIds, callback) => {
+      db.run(
+        `CREATE TABLE IF NOT EXISTS course_students (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          courseId INTEGER NOT NULL,
+          studentId TEXT NOT NULL,
+          assignedAt DATETIME DEFAULT CURRENT_TIMESTAMP,
+          UNIQUE(courseId, studentId)
+        )`,
+        () => {
+          const stmt = db.prepare(
+            "INSERT OR IGNORE INTO course_students (courseId, studentId) VALUES (?, ?)"
+          );
+
+          let assignedCount = 0;
+          studentIds.forEach((studentId) => {
+            stmt.run([courseId, studentId], function(runErr) {
+              if (runErr) {
+                console.error(`❌ Error assigning student ${studentId}:`, runErr);
+              } else {
+                assignedCount++;
+                console.log(`✅ Assigned student ${studentId} to course ${courseId}`);
+              }
+            });
+          });
+
+          stmt.finalize(() => {
+            console.log(`🔗 === AUTO-ASSIGN SPECIFIC STUDENTS END ===\n`);
+            console.log(`🔗 Total students assigned: ${assignedCount}`);
+            if (callback) callback(assignedCount);
+          });
+        }
+      );
+    };
 
     // If classroomId is provided, check mentor course quota for that classroom
     let quotaCheckPromise = Promise.resolve(true);
@@ -217,95 +318,6 @@ const createCourse = async (req, res) => {
     console.error("CREATE COURSE ERROR:", err);
     res.status(500).json({ message: "Server error" });
   }
-};
-
-// Auto-assign students from classroom
-const autoAssignStudentsFromClassroom = (courseId, classroomId, callback) => {
-  console.log(`\n🔗 === AUTO-ASSIGN STUDENTS FROM CLASSROOM START ===`);
-  console.log(`🔗 Course ID: ${courseId}, Classroom ID: ${classroomId}`);
-  
-  db.all(
-    "SELECT sca.studentId FROM student_classroom_assignment sca WHERE sca.classroomId = ?",
-    [classroomId],
-    (err, students) => {
-      if (err) {
-        console.error(`❌ Error fetching students from classroom:`, err);
-        if (callback) callback();
-        console.log(`🔗 === AUTO-ASSIGN STUDENTS FROM CLASSROOM END (ERROR) ===\n`);
-        return;
-      }
-
-      console.log(`🔗 Students found in classroom: ${students ? students.length : 0}`);
-      
-      if (!students || students.length === 0) {
-        console.warn(`⚠️ No students found in classroom ${classroomId} - skipping auto-assign`);
-        if (callback) callback();
-        console.log(`🔗 === AUTO-ASSIGN STUDENTS FROM CLASSROOM END (NO STUDENTS) ===\n`);
-        return;
-      }
-
-      console.log(`🔗 Students to assign:`, students.map(s => s.studentId));
-
-      db.run(
-        `CREATE TABLE IF NOT EXISTS course_students (
-          id INTEGER PRIMARY KEY AUTOINCREMENT,
-          courseId INTEGER NOT NULL,
-          studentId TEXT NOT NULL,
-          assignedAt DATETIME DEFAULT CURRENT_TIMESTAMP,
-          UNIQUE(courseId, studentId)
-        )`,
-        () => {
-          const stmt = db.prepare(
-            "INSERT OR IGNORE INTO course_students (courseId, studentId) VALUES (?, ?)"
-          );
-
-          let assignedCount = 0;
-          students.forEach((student) => {
-            stmt.run([courseId, student.studentId], function(runErr) {
-              if (runErr) {
-                console.error(`❌ Error assigning student ${student.studentId}:`, runErr);
-              } else {
-                assignedCount++;
-                console.log(`✅ Assigned student ${student.studentId} to course ${courseId}`);
-              }
-            });
-          });
-
-          stmt.finalize(() => {
-            console.log(`✅ Total students assigned: ${assignedCount}`);
-            console.log(`🔗 === AUTO-ASSIGN STUDENTS FROM CLASSROOM END (SUCCESS) ===\n`);
-            if (callback) callback(assignedCount);
-          });
-        }
-      );
-    }
-  );
-};
-
-// Auto-assign specific students
-const autoAssignSpecificStudents = (courseId, studentIds, callback) => {
-  db.run(
-    `CREATE TABLE IF NOT EXISTS course_students (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
-      courseId INTEGER NOT NULL,
-      studentId TEXT NOT NULL,
-      assignedAt DATETIME DEFAULT CURRENT_TIMESTAMP,
-      UNIQUE(courseId, studentId)
-    )`,
-    () => {
-      const stmt = db.prepare(
-        "INSERT OR IGNORE INTO course_students (courseId, studentId) VALUES (?, ?)"
-      );
-
-      studentIds.forEach((studentId) => {
-        stmt.run([courseId, studentId]);
-      });
-
-      stmt.finalize(() => {
-        if (callback) callback();
-      });
-    }
-  );
 };
 
 // Get courses by mentor

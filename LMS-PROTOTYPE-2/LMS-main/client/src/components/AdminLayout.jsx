@@ -19,7 +19,7 @@ import { useSimpleTranslation } from "../context/SimpleTranslationContext";
 import { useTranslation } from "../context/TranslationContext";
 import AnnouncementBell from "./AnnouncementBell";
 import LoginFooter from './LoginFooter';
-import whiteLogo from '../../../White Logo.png';
+import whiteLogo from '../../../core5 logo new new-modified (1).png';
 
 const AdminLayout = ({ children }) => {
   const location = useLocation();
@@ -37,41 +37,8 @@ const AdminLayout = ({ children }) => {
 
   const handleNavClick = async (e, item) => {
     // Intercept database export & calendar navigation to check feature access
-    const isDatabaseExport = item.path === '/admin/database-export';
-    const isCalendar = item.path && item.path.includes('/calendar');
-
-    if (isDatabaseExport || isCalendar) {
-      e.preventDefault();
-      try {
-        if (!token) {
-          setQuotaDetails({ type: 'feature', resourceType: isCalendar ? 'calendar' : 'database export', message: 'Please login to access this feature.' });
-          setShowQuotaModal(true);
-          return;
-        }
-
-        const res = await fetch(`${API}/api/subscriptions/check-feature-access`, {
-          headers: { Authorization: `Bearer ${token}` }
-        });
-
-        if (!res.ok) {
-          throw new Error('Feature check failed');
-        }
-
-        const data = await res.json();
-        if ((isDatabaseExport && data && data.canExportData === false) || (isCalendar && data && data.canAccessCalendar === false)) {
-          setQuotaDetails({ type: 'feature', resourceType: isCalendar ? 'calendar' : 'database export', message: 'Your account is on the Free plan — upgrade to access this feature.' });
-          setShowQuotaModal(true);
-          return;
-        }
-
-        // allowed
-        navigate(item.path);
-      } catch (err) {
-        console.error('Feature check error', err);
-        setQuotaDetails({ type: 'feature', resourceType: isCalendar ? 'calendar' : 'database export', message: 'Your account is on the Free plan — upgrade to access this feature.' });
-        setShowQuotaModal(true);
-      }
-    }
+    // DISABLED: Allow all features without restrictions
+    // Database export and calendar are now accessible to all users
   };
 
   const handleLogout = () => {
@@ -104,8 +71,8 @@ const AdminLayout = ({ children }) => {
     <div className="h-screen bg-background overflow-hidden">
       {/* ================= DESKTOP SIDEBAR ================= */}
       <aside
-        className={`fixed top-0 left-0 h-full bg-gradient-to-b from-slate-900 to-slate-800 text-white shadow-lg z-40 hidden lg:block transition-all duration-300 ${
-          sidebarCollapsed ? "w-20" : "w-64"
+        className={`fixed top-0 left-0 h-full bg-gradient-to-b from-slate-900 to-slate-800 text-white shadow-lg z-40 hidden md:block transition-all duration-300 ${
+          sidebarCollapsed ? "w-16 md:w-20" : "w-56 md:w-64"
         }`}
       >
         <div className="flex flex-col h-full">
@@ -172,15 +139,15 @@ const AdminLayout = ({ children }) => {
       </aside>
 
       {/* ================= MAIN CONTENT ================= */}
-      <main className={`transition-all flex-1 overflow-hidden ${sidebarCollapsed ? "lg:ml-20" : "lg:ml-64"} h-screen flex flex-col`}>
+      <main className={`transition-all flex-1 overflow-hidden ${sidebarCollapsed ? "md:ml-16 lg:ml-20" : "md:ml-56 lg:ml-64"} h-screen flex flex-col`}>
         {/* Top Bar */}
-        <header className="sticky top-0 bg-white border-b z-30 px-4 py-3">
+        <header className="sticky top-0 bg-white border-b z-30 px-3 sm:px-4 py-3">
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-4">
-              <button className="lg:hidden" onClick={() => setMobileMenuOpen(!mobileMenuOpen)}>
-                <ChevronRight />
+            <div className="flex items-center gap-3 sm:gap-4">
+              <button className="md:hidden" onClick={() => setMobileMenuOpen(!mobileMenuOpen)}>
+                <ChevronRight size={20} />
               </button>
-              <h1 className="text-xl font-bold">{currentPage}</h1>
+              <h1 className="text-lg sm:text-xl font-bold truncate">{currentPage}</h1>
             </div>
 
             {/* Announcement Bell */}
@@ -190,8 +157,16 @@ const AdminLayout = ({ children }) => {
 
         {/* Mobile Sidebar */}
         {mobileMenuOpen && (
-          <div className="fixed inset-0 bg-black/50 z-40 lg:hidden">
-            <div className="w-64 bg-white h-full p-4">
+          <div className="mobile-backdrop" onClick={() => setMobileMenuOpen(false)}>
+            <div className="mobile-sidebar open" onClick={(e) => e.stopPropagation()}>
+              <div className="p-4 border-b">
+                <div className="flex items-center justify-between">
+                  <img src={whiteLogo} alt="Core5 Academy" className="h-10 w-auto" />
+                  <button onClick={() => setMobileMenuOpen(false)}>
+                    <ChevronRight size={20} />
+                  </button>
+                </div>
+              </div>
               {navItems.map((item) => (
                 <Link
                   key={item.path}
@@ -203,19 +178,21 @@ const AdminLayout = ({ children }) => {
                   <span>{t(item.nameKey)}</span>
                 </Link>
               ))}
-              <button
-                onClick={handleLogout}
-                className="mt-6 w-full flex justify-center gap-2 p-3 bg-danger/10 text-danger rounded-lg"
-              >
-                <LogOut size={18} />
-                {t('nav_logout')}
-              </button>
+              <div className="p-4 border-t mt-auto">
+                <button
+                  onClick={handleLogout}
+                  className="w-full flex items-center justify-center gap-2 p-3 bg-red-500/10 text-red-600 rounded-lg hover:bg-red-500/20"
+                >
+                  <LogOut size={18} />
+                  <span>{t('nav_logout')}</span>
+                </button>
+              </div>
             </div>
           </div>
         )}
 
         {/* Page Content */}
-        <div className="flex-1 overflow-y-auto p-4 md:p-6">{children}</div>
+        <div className="flex-1 overflow-y-auto scrollable-content p-3 sm:p-4 md:p-6">{children}</div>
       </main>
       
       {/* Footer */}

@@ -132,7 +132,7 @@ const AdminDashboard = () => {
           </div>
 
           {/* ================= STATS ================= */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+          <div className="dashboard-grid mb-6 sm:mb-8">
             <StatCard title={t('total_students')} value={stats.students} icon={<Users />} link="/admin/users" />
             <StatCard title={t('total_mentors')} value={stats.mentors} icon={<UserCheck />} link="/admin/mentors" />
             <StatCard title={t('total_courses')} value={stats.courses} icon={<BookOpen />} />
@@ -140,24 +140,26 @@ const AdminDashboard = () => {
           </div>
 
           {/* ================= QUICK ACTIONS ================= */}
-          <div className="mb-8">
-            <h2 className="text-xl font-bold mb-4">{t('quick_actions')}</h2>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="mb-6 sm:mb-8">
+            <h2 className="responsive-text-lg font-bold mb-3 sm:mb-4">{t('quick_actions')}</h2>
+            <div className="responsive-grid">
               <QuickLink to="/admin/users" icon={<Users />} title={t('manage_users')} />
             </div>
           </div>
 
           {/* ================= RECENT ACTIVITY ================= */}
-          <div className="bg-white rounded-xl border p-5">
-            <div className="flex items-center justify-between mb-6">
-              <h2 className="text-xl font-bold">{t('recent_activity')}</h2>
-              <Clock size={20} className="text-gray-400" />
-            </div>
+          <div className="responsive-card">
+            <div className="responsive-card-content">
+              <div className="flex items-center justify-between mb-4 sm:mb-6">
+                <h2 className="responsive-text-lg font-bold">{t('recent_activity')}</h2>
+                <Clock size={20} className="text-gray-400" />
+              </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 text-center">
-              <Activity label={t('new_users')} value={stats.newUsers} icon={<UserPlus />} />
-              <Activity label={t('pending_mentors')} value={stats.pendingMentors} icon={<UserCheck />} />
-              <Activity label={t('published_courses')} value={stats.publishedCourses} icon={<BookOpen />} />
+              <div className="responsive-grid">
+                <Activity label={t('new_users')} value={stats.newUsers} icon={<UserPlus />} />
+                <Activity label={t('pending_mentors')} value={stats.pendingMentors} icon={<UserCheck />} />
+                <Activity label={t('published_courses')} value={stats.publishedCourses} icon={<BookOpen />} />
+              </div>
             </div>
           </div>
 
@@ -177,21 +179,25 @@ const AdminDashboard = () => {
 /* ================= HELPERS ================= */
 
 const StatCard = ({ title, value, icon, link }) => (
-  <div className="bg-gradient-to-br from-white to-gray-50 rounded-xl border p-5 shadow-sm hover:shadow-md transition-shadow">
-    <div className="flex justify-between mb-4">
-      <div className="p-3 bg-blue-100 rounded-lg text-blue-600">{icon}</div>
-      {link && <Link to={link} className="text-blue-600 text-sm hover:underline">View</Link>}
+  <div className="responsive-card hover:shadow-md transition-shadow">
+    <div className="responsive-card-content">
+      <div className="flex justify-between mb-3 sm:mb-4">
+        <div className="p-2 sm:p-3 bg-blue-100 rounded-lg text-blue-600">{icon}</div>
+        {link && <Link to={link} className="text-blue-600 responsive-text-sm hover:underline">View</Link>}
+      </div>
+      <p className="responsive-text-sm text-gray-600 font-medium">{title}</p>
+      <p className="responsive-text-xl sm:text-2xl font-bold text-gray-800">{value}</p>
     </div>
-    <p className="text-sm text-gray-600 font-medium">{title}</p>
-    <p className="text-2xl font-bold text-gray-800">{value}</p>
   </div>
 );
 
 const QuickLink = ({ to, icon, title }) => (
-  <Link to={to} className="bg-gradient-to-r from-blue-500 to-indigo-600 rounded-xl p-5 text-white hover:shadow-lg hover:scale-105 transition-all">
-    <div className="flex items-center gap-4">
-      <div className="p-3 bg-white/20 rounded-lg backdrop-blur-sm">{icon}</div>
-      <h3 className="font-semibold text-lg">{title}</h3>
+  <Link to={to} className="responsive-card bg-gradient-to-r from-blue-500 to-indigo-600 text-white hover:shadow-lg hover:scale-105 transition-all">
+    <div className="responsive-card-content">
+      <div className="flex items-center gap-3 sm:gap-4">
+        <div className="p-2 sm:p-3 bg-white/20 rounded-lg backdrop-blur-sm">{icon}</div>
+        <h3 className="font-semibold responsive-text-base sm:text-lg">{title}</h3>
+      </div>
     </div>
   </Link>
 );

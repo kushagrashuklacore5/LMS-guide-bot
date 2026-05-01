@@ -1,4 +1,4 @@
-const db = require('./config/sqlite-db');
+const db = require('config/database-switch');
 
 console.log('=== CHECKING SUBSCRIPTION TABLE ===');
 db.all('SELECT * FROM subscriptions ORDER BY createdAt DESC', (err, rows) => {

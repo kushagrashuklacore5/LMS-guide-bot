@@ -1,17 +1,18 @@
 const sqlite3 = require('sqlite3').verbose();
 const path = require('path');
 
-// Create database file path
-const dbPath = path.join(__dirname, '..', 'data', 'lms-database.sqlite');
+// Database file path - use permanent database
+const DB_PATH = path.join(__dirname, '../data/lms_permanent.db');
 
 // Initialize database connection
-const db = new sqlite3.Database(dbPath, (err) => {
+const db = new sqlite3.Database(DB_PATH, (err) => {
   if (err) {
     console.error('SQLite Connection Error:', err.message);
+    console.log(' Running in Offline Mode (Mock Data Enabled)');
     console.log('⚠️ Running in Offline Mode (Mock Data Enabled)');
     global.isDbConnected = false;
   } else {
-    console.log('✅ SQLite Connected to:', dbPath);
+    console.log('✅ SQLite Connected to:', DB_PATH);
     global.isDbConnected = true;
     initializeTables();
   }
@@ -45,6 +46,13 @@ function initializeTables() {
     db.run(`ALTER TABLE users ADD COLUMN classroom_id INTEGER`, (err) => {
       if (err && !err.message.includes('duplicate column name')) {
         // Column might already exist, which is fine
+      }
+    });
+    
+    // Fix column name from is_approved to isApproved if needed
+    db.run(`ALTER TABLE users RENAME COLUMN is_approved TO isApproved`, (err) => {
+      if (err && !err.message.includes('no such column')) {
+        // Column might not exist or already renamed, which is fine
       }
     });
     

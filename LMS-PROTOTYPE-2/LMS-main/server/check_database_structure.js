@@ -5,7 +5,7 @@ console.log('🔍 CHECKING DATABASE STRUCTURE...');
 console.log('===============================');
 
 // Check all tables
-db.all("SELECT name FROM sqlite_master WHERE type='table'", (err, tables) => {
+db.all("SELECT table_name FROM information_schema.tables WHERE table_schema = 'public'", (err, tables) => {
   if (err) {
     console.error('Error checking tables:', err);
     return;
@@ -17,7 +17,7 @@ db.all("SELECT name FROM sqlite_master WHERE type='table'", (err, tables) => {
   });
   
   // Check for users table
-  db.all("SELECT name FROM sqlite_master WHERE type='table' AND name='users'", (err, userTables) => {
+  db.all("SELECT table_name FROM information_schema.tables WHERE table_schema = 'public' AND name='users'", (err, userTables) => {
     if (err) {
       console.error('Error checking users table:', err);
       return;
@@ -27,7 +27,7 @@ db.all("SELECT name FROM sqlite_master WHERE type='table'", (err, tables) => {
       console.log('\n✅ Users table exists');
       
       // Check users table structure
-      db.all('PRAGMA table_info(users)', (err, columns) => {
+      db.all('SELECT column_name, data_type FROM information_schema.columns WHERE table_name = 'users)', (err, columns) => {
         if (err) {
           console.error('Error getting users table info:', err);
           return;
@@ -62,7 +62,7 @@ db.all("SELECT name FROM sqlite_master WHERE type='table'", (err, tables) => {
 });
 
 function checkPaymentsTable() {
-  db.all("SELECT name FROM sqlite_master WHERE type='table' AND name='payments'", (err, paymentTables) => {
+  db.all("SELECT table_name FROM information_schema.tables WHERE table_schema = 'public' AND name='payments'", (err, paymentTables) => {
     if (err) {
       console.error('Error checking payments table:', err);
       return;
@@ -72,7 +72,7 @@ function checkPaymentsTable() {
       console.log('\n✅ Payments table exists');
       
       // Check payments table structure
-      db.all('PRAGMA table_info(payments)', (err, columns) => {
+      db.all('SELECT column_name, data_type FROM information_schema.columns WHERE table_name = 'payments)', (err, columns) => {
         if (err) {
           console.error('Error getting payments table info:', err);
           return;

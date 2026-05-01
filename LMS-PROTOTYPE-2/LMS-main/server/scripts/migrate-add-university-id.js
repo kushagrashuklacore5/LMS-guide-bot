@@ -64,7 +64,7 @@ async function runMigration() {
                 // Step 4: Check column info
                 console.log('\nStep 4: Checking table schema...');
                 db.all(
-                  `PRAGMA table_info(users)`,
+                  `SELECT column_name, data_type FROM information_schema.columns WHERE table_name = 'users)`,
                   (err, columns) => {
                     if (err) {
                       console.error('Error getting schema:', err);

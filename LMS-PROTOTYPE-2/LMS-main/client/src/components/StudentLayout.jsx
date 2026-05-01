@@ -15,7 +15,7 @@ import QuotaLimitModal from './QuotaLimitModal';
 import { useTranslation } from "../context/TranslationContext";
 import AnnouncementBell from "./AnnouncementBell";
 import LoginFooter from './LoginFooter';
-import whiteLogo from '../../../White Logo.png';
+import whiteLogo from '../../../core5 logo new new-modified (1).png';
 
 const StudentLayout = ({ children }) => {
   const location = useLocation();
@@ -39,60 +39,8 @@ const StudentLayout = ({ children }) => {
       return;
     }
 
-    // All other features are restricted on free plan
-    const restrictedFeatures = {
-      '/student/timetable': 'timetable',
-      '/student/attendance': 'attendance',
-      '/student/pay-fees': 'fee payments',
-      '/student/results': 'results',
-      '/student/calendar': 'calendar'
-    };
-
-    const featureName = restrictedFeatures[item.path];
-
-    if (featureName) {
-      e.preventDefault();
-      try {
-        if (!token) {
-          setQuotaDetails({ 
-            type: 'feature', 
-            resourceType: featureName, 
-            message: 'Please login to access this feature.' 
-          });
-          setShowQuotaModal(true);
-          return;
-        }
-
-        const res = await fetch(`${API}/api/subscriptions/check-feature-access`, {
-          headers: { Authorization: `Bearer ${token}` }
-        });
-
-        if (!res.ok) throw new Error('feature check failed');
-        const data = await res.json();
-
-        // Check if current plan is 'free'
-        if (data.currentPlan === 'free') {
-          setQuotaDetails({ 
-            type: 'feature', 
-            resourceType: featureName, 
-            message: 'Your account is on the Free plan — upgrade to access this feature.' 
-          });
-          setShowQuotaModal(true);
-          return;
-        }
-
-        // If not free plan, allow navigation
-        navigate(item.path);
-      } catch (err) {
-        console.error('Feature check error', err);
-        setQuotaDetails({ 
-          type: 'feature', 
-          resourceType: featureName, 
-          message: 'Your account is on the Free plan — upgrade to access this feature.' 
-        });
-        setShowQuotaModal(true);
-      }
-    }
+    // DISABLED: Allow all features without restrictions
+    // All features are now accessible to all users
   };
 
   // Language selector removed from Student portal
@@ -104,54 +52,58 @@ const StudentLayout = ({ children }) => {
       icon: <LayoutDashboard size={20} />,
     },
     {
-      path: '/student/timetable', // ✅ ADD TIMETABLE
-      nameKey: 'timetable_label',
-      icon: <Calendar size={20} />,
-    },
-    {
-      path: '/student/attendance',
-      nameKey: 'attendance',
-      icon: <FileText size={20} />,
-    },
-    {
-      path: '/student/pay-fees',
-      nameKey: 'pay_fees',
-      icon: <Award size={20} />, // Use Award or another icon
+      path: '/student/courses',
+      nameKey: 'nav_courses',
+      icon: <BookOpen size={20} />,
     },
     {
       path: '/student/results',
-      nameKey: 'results',
+      nameKey: 'nav_results',
+      icon: <Award size={20} />,
+    },
+    {
+      path: '/student/attendance',
+      nameKey: 'nav_attendance',
+      icon: <Calendar size={20} />,
+    },
+    {
+      path: '/student/certificates',
+      nameKey: 'nav_certificates',
       icon: <FileText size={20} />,
     },
     {
-      path: '/student/calendar',
-      nameKey: 'nav_calendar',
+      path: '/student/timetable',
+      nameKey: 'nav_timetable',
       icon: <Calendar size={20} />,
+    },
+    {
+      path: '/student/assessment',
+      nameKey: 'nav_assessment',
+      icon: <FileText size={20} />,
     },
   ];
 
   const currentPage =
-    navItems.find(item => item.path === location.pathname)?.nameKey 
-      ? t(navItems.find(item => item.path === location.pathname)?.nameKey)
+    navItems.find((item) => item.path === location.pathname)?.nameKey
+      ? t(navItems.find((item) => item.path === location.pathname)?.nameKey)
       : t('nav_dashboard');
 
   return (
     <div className="h-screen bg-background overflow-hidden">
-
       {/* ================= DESKTOP SIDEBAR ================= */}
       <aside
         className={`
-        fixed top-0 left-0 h-full z-40
-        hidden lg:block transition-all duration-300
-        ${sidebarCollapsed ? 'w-20' : 'w-64'}
-        bg-gradient-to-b from-purple-700 via-purple-600 to-purple-500
-        text-white shadow-xl
-      `}
+          fixed top-0 left-0 h-full z-40 hidden lg:block
+          transition-all duration-300
+          ${sidebarCollapsed ? "w-20" : "w-64"}
+          bg-gradient-to-b from-blue-700 via-indigo-700 to-cyan-700
+          shadow-[0_0_40px_rgba(0,0,0,0.25)]
+        `}
       >
-        <div className="flex flex-col h-full">
+        <div className="flex flex-col h-full backdrop-blur-xl bg-white/5">
 
-          {/* ================= SIDEBAR HEADER (LOGO) ================= */}
-          <div className="h-24 sm:h-28 border-b border-white/10 flex items-center justify-center">
+          {/* ===== LOGO ===== */}
+          <div className="h-24 sm:h-28 border-b border-white/20 flex items-center justify-center">
             {!sidebarCollapsed && (
               <img
                 src={whiteLogo}
@@ -208,76 +160,116 @@ const StudentLayout = ({ children }) => {
                       ${sidebarCollapsed ? 'justify-center' : ''}
                     `}
                   >
-                    <div className={`${isActive ? 'text-white' : 'text-white/70'}`}>
-                      {item.icon}
-                    </div>
-                    {!sidebarCollapsed && (
-                      <span className="ml-3 font-medium">{t(item.nameKey)}</span>
-                    )}
+                    {item.icon}
+                    {!sidebarCollapsed && <span className="font-medium">{t(item.nameKey)}</span>}
                   </Link>
                 );
               })}
             </div>
           </nav>
 
-          {/* ================= SIDEBAR FOOTER ================= */}
           <div className="p-4 border-t border-white/10">
             <button
               onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
-              className={`
-                w-full flex items-center justify-center p-3 rounded-xl
-                bg-white/10 text-white hover:bg-white/20 transition
-                ${sidebarCollapsed ? '' : 'justify-between'}
-              `}
+              className="w-full flex items-center justify-between p-3 rounded-lg bg-white/5 hover:bg-white/10 text-gray-300"
             >
-              {sidebarCollapsed ? (
-                <ChevronRight size={18} />
-              ) : (
-                <>
-                  <span className="text-sm font-medium">{t('nav_collapse')}</span>
-                  <ChevronLeft size={18} />
-                </>
-              )}
+              {sidebarCollapsed ? <ChevronRight /> : <>{t('nav_collapse') ?? 'Collapse'} <ChevronLeft /></>}
             </button>
 
             <button
               onClick={handleLogout}
-              className={`
-                mt-3 w-full flex items-center p-3 rounded-xl
-                bg-red-500/20 text-white hover:bg-red-500/30 transition
-                ${sidebarCollapsed ? 'justify-center' : ''}
-              `}
+              className={`mt-3 w-full flex items-center p-3 rounded-lg bg-red-500/10 text-red-400 hover:bg-red-500/20 ${sidebarCollapsed ? 'justify-center' : ''}`}
             >
               <LogOut size={18} />
-              {!sidebarCollapsed && (
-                <span className="ml-3 font-medium">{t('nav_logout')}</span>
-              )}
+              {!sidebarCollapsed && <span className="ml-3">{t('nav_logout') ?? 'Logout'}</span>}
             </button>
           </div>
         </div>
       </aside>
 
+      {/* ================= MOBILE SIDEBAR ================= */}
+      {mobileMenuOpen && (
+        <div className="mobile-backdrop" onClick={() => setMobileMenuOpen(false)}>
+          <div className="mobile-sidebar open bg-gradient-to-b from-slate-900 to-slate-800" onClick={e => e.stopPropagation()}>
+            <div className="p-4 border-b border-white/10">
+              <div className="flex items-center justify-between">
+                <img src={whiteLogo} alt="Core5 Academy" className="h-10 w-auto" />
+                <button onClick={() => setMobileMenuOpen(false)}>
+                  <ChevronRight size={20} />
+                </button>
+              </div>
+            </div>
+            <div className="p-5 border-b border-white/10">
+              <div className="flex items-center space-x-3">
+                <div className="w-10 h-10 rounded-xl bg-white/20 flex items-center justify-center">
+                  <span className="text-white font-bold text-lg">S</span>
+                </div>
+                <div>
+                  <h1 className="font-bold text-lg">Student Portal</h1>
+                  <p className="text-white/70 text-sm">Welcome back</p>
+                </div>
+              </div>
+            </div>
+
+            <nav className="p-4">
+              <div className="space-y-1">
+                {navItems.map(item => {
+                  const isActive = location.pathname === item.path;
+                  return (
+                    <Link
+                      key={item.path}
+                      to={item.path}
+                      onClick={(e) => { setMobileMenuOpen(false); handleNavClick(e, item); }}
+                      className={`
+                        flex items-center space-x-3 rounded-xl px-3 py-3 transition
+                        ${isActive
+                          ? 'bg-white/20 text-white'
+                          : 'text-white/80 hover:bg-white/10'
+                        }
+                      `}
+                    >
+                      {item.icon}
+                      <span className="font-medium">{t(item.nameKey)}</span>
+                    </Link>
+                  );
+                })}
+              </div>
+
+              <div className="mt-6 space-y-2">
+                <button
+                  onClick={handleLogout}
+                  className="w-full flex items-center justify-center space-x-2 p-3 rounded-xl bg-red-500/20 hover:bg-red-500/30"
+                >
+                  <LogOut size={18} />
+                  <span className="font-medium">Logout</span>
+                </button>
+              </div>
+            </nav>
+          </div>
+        </div>
+      )}
+
       {/* ================= MAIN CONTENT ================= */}
       <main
         className={`
-        transition-all duration-300 flex-1 overflow-hidden
-        ${sidebarCollapsed ? 'lg:ml-20' : 'lg:ml-64'}
-        h-screen flex flex-col
-      `}
+          transition-all duration-300 flex-1 overflow-y-auto
+          ${sidebarCollapsed ? 'md:ml-16 lg:ml-20' : 'md:ml-56 lg:ml-64'}
+          flex-1 overflow-y-auto
+        `}
       >
 
         {/* ================= TOP BAR ================= */}
         <header className="sticky top-0 z-30 bg-white shadow-sm border-b border-gray-200">
-          <div className="px-4 py-3">
+          <div className="px-3 sm:px-4 py-3">
             <div className="flex items-center justify-between">
-              <div className="flex items-center space-x-4">
+              <div className="flex items-center gap-3 sm:gap-4">
                 <button
                   onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-                  className="lg:hidden p-2 rounded-lg hover:bg-gray-100"
+                  className="md:hidden p-2 rounded-lg hover:bg-gray-100"
                 >
-                  <ChevronRight size={24} className="text-text" />
+                  <ChevronRight size={20} className="text-text" />
                 </button>
-                <h1 className="text-xl font-bold text-text">{currentPage}</h1>
+                <h1 className="text-lg sm:text-xl font-bold text-text truncate">{currentPage}</h1>
               </div>
 
               <div className="flex items-center space-x-3">
@@ -300,68 +292,8 @@ const StudentLayout = ({ children }) => {
           </div>
         </header>
 
-        {/* ================= MOBILE SIDEBAR ================= */}
-        {mobileMenuOpen && (
-          <div
-            className="fixed inset-0 bg-black/50 z-40 lg:hidden"
-            onClick={() => setMobileMenuOpen(false)}
-          >
-            <div
-              className="fixed inset-y-0 left-0 w-64 bg-gradient-to-b from-purple-700 to-purple-500 text-white shadow-xl"
-              onClick={e => e.stopPropagation()}
-            >
-              <div className="p-5 border-b border-white/10">
-                <div className="flex items-center space-x-3">
-                  <div className="w-10 h-10 rounded-xl bg-white/20 flex items-center justify-center">
-                    <span className="text-white font-bold text-lg">S</span>
-                  </div>
-                  <div>
-                    <h1 className="font-bold text-lg">Student Portal</h1>
-                    <p className="text-white/70 text-sm">Welcome back</p>
-                  </div>
-                </div>
-              </div>
-
-              <nav className="p-4">
-                <div className="space-y-1">
-                  {navItems.map(item => {
-                    const isActive = location.pathname === item.path;
-                    return (
-                      <Link
-                        key={item.path}
-                        to={item.path}
-                        onClick={(e) => { setMobileMenuOpen(false); handleNavClick(e, item); }}
-                        className={`
-                          flex items-center space-x-3 rounded-xl px-3 py-3 transition
-                          ${isActive
-                            ? 'bg-white/20 text-white'
-                            : 'text-white/80 hover:bg-white/10'
-                          }
-                        `}
-                      >
-                        {item.icon}
-                        <span className="font-medium">{item.name}</span>
-                      </Link>
-                    );
-                  })}
-                </div>
-
-                <div className="mt-6 space-y-2">
-                  <button
-                    onClick={handleLogout}
-                    className="w-full flex items-center justify-center space-x-2 p-3 rounded-xl bg-red-500/20 hover:bg-red-500/30"
-                  >
-                    <LogOut size={18} />
-                    <span className="font-medium">Logout</span>
-                  </button>
-                </div>
-              </nav>
-            </div>
-          </div>
-        )}
-
         {/* ================= CONTENT AREA ================= */}
-        <div className="flex-1 overflow-y-auto p-4 md:p-6">{children}</div>
+        <div className="flex-1 overflow-y-auto scrollable-content p-3 sm:p-4 md:p-6">{children}</div>
 
       </main>
       

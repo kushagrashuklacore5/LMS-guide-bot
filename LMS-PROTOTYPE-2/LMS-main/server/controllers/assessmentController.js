@@ -1,4 +1,7 @@
-const db = require("../config/sqlite-db");
+const tenantConnectionManager = require('../config/tenant-connection-manager');
+const db = require('../config/database-switch');
+
+
 
 // Helper function to add _id field for frontend compatibility
 const mapAssessment = (assessment) => {

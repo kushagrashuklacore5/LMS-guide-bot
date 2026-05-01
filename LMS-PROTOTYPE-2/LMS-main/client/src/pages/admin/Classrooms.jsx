@@ -6,35 +6,99 @@ import { Plus } from "lucide-react";
 import { toast } from "react-toastify";
 import { useNavigate } from "react-router-dom";
 import CreateClassroomModal from "./CreateClassroomModal";
-import { useUniversalPersistence } from "../../hooks/useUniversalPersistenceSimple";
 
 const Classrooms = () => {
   const { API, token } = useAuth();
   const navigate = useNavigate();
   const { t } = useTranslation();
   
-  // Use universal persistence for classrooms
-  const { data: classrooms, loading, error, addItem, updateItem, removeItem, loadData } = useUniversalPersistence('classrooms');
+  const [classrooms, setClassrooms] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [openModal, setOpenModal] = useState(false);
+
+  // Load classrooms from API
+  const loadClassrooms = async () => {
+    try {
+      setLoading(true);
+      const response = await fetch(`${API}/classrooms`, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+      
+      if (response.ok) {
+        const data = await response.json();
+        console.log('Classrooms data:', data);
+        
+        // Handle both direct array and wrapped response formats
+        if (data.success && Array.isArray(data.data)) {
+          setClassrooms(data.data);
+        } else if (Array.isArray(data)) {
+          setClassrooms(data);
+        } else {
+          console.warn('Unexpected response format:', data);
+          setClassrooms([]);
+        }
+      } else {
+        console.error('Failed to load classrooms');
+        setClassrooms([]);
+      }
+    } catch (error) {
+      console.error('Error loading classrooms:', error);
+      setClassrooms([]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Load classrooms on component mount
+  useEffect(() => {
+    loadClassrooms();
+  }, []);
 
   const handleCreateClassroom = async (classroomData) => {
     try {
-      await addItem(classroomData);
-      toast.success(t('classroom_created_successfully'));
-      setOpenModal(false);
+      const response = await fetch(`${API}/classrooms`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify(classroomData)
+      });
+      
+      if (response.ok) {
+        toast.success(t('classroom_created_successfully'));
+        setOpenModal(false);
+        loadClassrooms(); // Reload classrooms
+      } else {
+        const errorData = await response.json();
+        toast.error(errorData.message || t('failed_to_create_classroom'));
+      }
     } catch (error) {
       console.error('Create error:', error);
-      toast.error(t('classroom_created_locally'));
+      toast.error(t('failed_to_create_classroom'));
     }
   };
 
   const handleDeleteClassroom = async (id) => {
     try {
-      await removeItem(id);
-      toast.success(t('classroom_deleted_successfully'));
+      const response = await fetch(`${API}/classrooms/${id}`, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+      
+      if (response.ok) {
+        toast.success(t('classroom_deleted_successfully'));
+        loadClassrooms(); // Reload classrooms
+      } else {
+        toast.error(t('failed_to_delete_classroom'));
+      }
     } catch (error) {
       console.error('Delete error:', error);
-      toast.success(t('classroom_deleted_locally'));
+      toast.error(t('failed_to_delete_classroom'));
     }
   };
 
@@ -104,7 +168,7 @@ const Classrooms = () => {
         <CreateClassroomModal
           open={openModal}
           onClose={() => setOpenModal(false)}
-          onSuccess={loadData}
+          onSuccess={loadClassrooms}
         />
       </div>
     </AdminLayout>

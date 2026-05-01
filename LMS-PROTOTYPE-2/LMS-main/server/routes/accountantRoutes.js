@@ -1,10 +1,18 @@
 const express = require('express');
 const router = express.Router();
-const db = require('../config/sqlite-db');
 const authMiddleware = require('../middleware/authMiddleware');
 const Razorpay = require('razorpay');
 const crypto = require('crypto');
 const { getCurrentConfig } = require('../config/razorpay-config');
+
+
+
+
+// Helper function to get database from request context or fallback to master
+function getDatabaseFromRequest(req) {
+  return req.tenant?.database || require('../config/database-switch');
+}
+
 
 // Initialize Razorpay with current configuration
 const razorpayConfig = getCurrentConfig();
@@ -26,7 +34,7 @@ router.get('/dashboard', authMiddleware, (req, res) => {
     }
 
     // Get accountant's university_id from users table
-    db.get('SELECT university_id FROM users WHERE id = ? AND role = "accountant"', [userId], (err, user) => {
+    getDatabaseFromRequest(req).get('SELECT university_id FROM users WHERE id = ? AND role = "accountant"', [userId], (err, user) => {
       if (err) {
         console.error('Get accountant university error:', err);
         return res.status(500).json({ success: false, message: 'Database error' });
@@ -50,7 +58,7 @@ router.get('/dashboard', authMiddleware, (req, res) => {
       };
 
       // Get revenue from payments table
-      db.all('SELECT SUM(amount) as totalRevenue FROM payments WHERE status = "paid" AND university_id = ?', [universityId], (err, revenueResult) => {
+      getDatabaseFromRequest(req).all('SELECT SUM(amount) as totalRevenue FROM payments WHERE status = "paid" AND university_id = ?', [universityId], (err, revenueResult) => {
         if (err) {
           console.error('Get revenue error:', err);
         } else {
@@ -58,7 +66,7 @@ router.get('/dashboard', authMiddleware, (req, res) => {
         }
 
         // Get payment stats
-        db.all('SELECT status, COUNT(*) as count FROM payments WHERE university_id = ?', [universityId], (err, paymentResults) => {
+        getDatabaseFromRequest(req).all('SELECT status, COUNT(*) as count FROM payments WHERE university_id = ?', [universityId], (err, paymentResults) => {
           if (err) {
             console.error('Get payment stats error:', err);
           } else {
@@ -69,7 +77,7 @@ router.get('/dashboard', authMiddleware, (req, res) => {
           }
 
           // Get expense stats
-          db.all('SELECT SUM(amount) as totalExpenses FROM expenses WHERE university_id = ?', [universityId], (err, expenseResult) => {
+          getDatabaseFromRequest(req).all('SELECT SUM(amount) as totalExpenses FROM expenses WHERE university_id = ?', [universityId], (err, expenseResult) => {
             if (err) {
               console.error('Get expenses error:', err);
             } else {
@@ -77,7 +85,7 @@ router.get('/dashboard', authMiddleware, (req, res) => {
             }
 
             // Get university name
-            db.get('SELECT name FROM universities WHERE id = ?', [universityId], (err, universityResult) => {
+            getDatabaseFromRequest(req).get('SELECT name FROM universities WHERE id = ?', [universityId], (err, universityResult) => {
               if (err) {
                 console.error('Get university name error:', err);
                 stats.universityName = 'University';
@@ -163,7 +171,7 @@ router.get('/vendor-invoices', authMiddleware, (req, res) => {
     }
 
     // Get accountant's university_id from users table
-    db.get('SELECT university_id FROM users WHERE id = ? AND role = "accountant"', [userId], (err, user) => {
+    getDatabaseFromRequest(req).get('SELECT university_id FROM users WHERE id = ? AND role = "accountant"', [userId], (err, user) => {
       if (err) {
         console.error('Get accountant university error:', err);
         if (!res.headersSent) {
@@ -181,7 +189,7 @@ router.get('/vendor-invoices', authMiddleware, (req, res) => {
       console.log(' Accountant Vendor Invoices - User ID:', userId, 'University ID:', universityId);
 
       // Get all invoices from database filtered by university with timeout
-      db.all('SELECT * FROM invoices WHERE university_id = ? ORDER BY issueDate DESC', [universityId], (err, invoices) => {
+      getDatabaseFromRequest(req).all('SELECT * FROM invoices WHERE university_id = ? ORDER BY issueDate DESC', [universityId], (err, invoices) => {
         if (err) {
           console.error('Get vendor invoices error:', err);
           if (!res.headersSent) {
@@ -217,7 +225,7 @@ router.post('/pay-invoice/:invoiceId', authMiddleware, (req, res) => {
     }
 
     // First check if invoice exists and is pending
-    db.get('SELECT * FROM invoices WHERE id = ?', [invoiceId], (err, invoice) => {
+    getDatabaseFromRequest(req).get('SELECT * FROM invoices WHERE id = ?', [invoiceId], (err, invoice) => {
       if (err) {
         console.error('Check invoice error:', err);
         return res.status(500).json({ success: false, message: 'Database error' });
@@ -233,7 +241,7 @@ router.post('/pay-invoice/:invoiceId', authMiddleware, (req, res) => {
 
       // Update invoice status to paid
       const paidDate = new Date().toISOString();
-      db.run(
+      getDatabaseFromRequest(req).run(
         'UPDATE invoices SET status = ?, paidDate = ?, updatedAt = ? WHERE id = ?',
         ['paid', paidDate, paidDate, invoiceId],
         function(err) {
@@ -243,7 +251,7 @@ router.post('/pay-invoice/:invoiceId', authMiddleware, (req, res) => {
           }
 
           // Log the payment transaction
-          db.run(
+          getDatabaseFromRequest(req).run(
             'INSERT INTO payment_transactions (invoice_id, user_id, amount, payment_date, status, created_at) VALUES (?, ?, ?, ?, ?, ?)',
             [invoiceId, userId, invoice.amount, paidDate, 'completed', paidDate],
             function(err) {
@@ -490,7 +498,7 @@ router.get('/fees-stats', authMiddleware, (req, res) => {
     }
 
     // Get accountant's university_id from users table
-    db.get('SELECT university_id FROM users WHERE id = ? AND role = "accountant"', [userId], (err, user) => {
+    getDatabaseFromRequest(req).get('SELECT university_id FROM users WHERE id = ? AND role = "accountant"', [userId], (err, user) => {
       if (err) {
         console.error('Get accountant university error:', err);
         // If users table doesn't exist, use default university_id
@@ -522,7 +530,7 @@ function fetchFeesStats(universityId, res) {
   };
 
   // Get total fees collected from payments table
-  db.all('SELECT SUM(amount) as totalFeesCollected FROM payments WHERE status = "success"', [universityId], (err, feesResult) => {
+  getDatabaseFromRequest(req).all('SELECT SUM(amount) as totalFeesCollected FROM payments WHERE status = "success"', [universityId], (err, feesResult) => {
     if (err) {
       console.error('Get paid fees error:', err);
     } else {
@@ -530,11 +538,11 @@ function fetchFeesStats(universityId, res) {
     }
 
     // Get total students count - try users table first, then fallback
-    db.all('SELECT COUNT(*) as totalStudents FROM users WHERE role = "student" AND university_id = ?', [universityId], (err, studentResult) => {
+    getDatabaseFromRequest(req).all('SELECT COUNT(*) as totalStudents FROM users WHERE role = "student" AND university_id = ?', [universityId], (err, studentResult) => {
       if (err) {
         console.error('Get student count error:', err);
         // Fallback: count unique studentIds from payments table
-        db.all('SELECT COUNT(DISTINCT studentId) as totalStudents FROM payments', [], (err, paymentStudentResult) => {
+        getDatabaseFromRequest(req).all('SELECT COUNT(DISTINCT studentId) as totalStudents FROM payments', [], (err, paymentStudentResult) => {
           if (err) {
             console.error('Get student count from payments error:', err);
             stats.totalStudents = 0;
@@ -554,7 +562,7 @@ function fetchFeesStats(universityId, res) {
       stats.averageFeesPerStudent = stats.totalStudents > 0 ? Math.round(stats.totalFeesCollected / stats.totalStudents) : 0;
 
       // Get recent payments from payments table
-      db.all('SELECT p.*, "Student " || p.studentId as studentName, "student@demo.com" as studentEmail FROM payments p WHERE p.status = "success" ORDER BY p.createdAt DESC LIMIT 10', [], (err, paymentsResult) => {
+      getDatabaseFromRequest(req).all('SELECT p.*, "Student " || p.studentId as studentName, "student@demo.com" as studentEmail FROM payments p WHERE p.status = "success" ORDER BY p.createdAt DESC LIMIT 10', [], (err, paymentsResult) => {
         if (err) {
           console.error('Get recent payments error:', err);
           stats.recentPayments = [];

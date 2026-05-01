@@ -52,7 +52,7 @@ function createTable() {
       
       // Verify table was created
       db.all(
-        "SELECT name FROM sqlite_master WHERE type='table' AND name='subscriptions'",
+        "SELECT table_name FROM information_schema.tables WHERE table_schema = 'public' AND name='subscriptions'",
         [],
         (err, rows) => {
           if (err || !rows || rows.length === 0) {
@@ -61,7 +61,7 @@ function createTable() {
           }
 
           // Get table info
-          db.all("PRAGMA table_info(subscriptions)", [], (err, columns) => {
+          db.all("SELECT column_name, data_type FROM information_schema.columns WHERE table_name = 'subscriptions)", [], (err, columns) => {
             if (err) {
               console.error('❌ Error getting table info:', err.message);
               process.exit(1);

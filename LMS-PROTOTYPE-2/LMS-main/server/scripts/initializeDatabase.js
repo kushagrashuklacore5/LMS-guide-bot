@@ -1,7 +1,7 @@
 // Comprehensive Database Initialization Script
 // This script ensures all database tables are created and properly initialized
 
-const db = require('../config/sqlite-db');
+const db = require('../config/database-switch');
 
 // Initialize all database tables for complete LMS functionality
 function initializeAllTables() {

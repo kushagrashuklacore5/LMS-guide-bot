@@ -6,6 +6,88 @@ const SuperAdminSubscription = () => {
   const [loading, setLoading] = useState(false)
   const [selectedPlan, setSelectedPlan] = useState('')
   const [currentSubscription, setCurrentSubscription] = useState(null)
+  const [planName, setPlanName] = useState('Free')
+  const API_BASE = import.meta.env.VITE_BACKEND_URL || 'http://localhost:5002'
+
+  // Fetch current subscription on mount
+  useEffect(() => {
+    const fetchCurrentSubscription = async () => {
+      try {
+        const response = await fetch(`${API_BASE}/api/subscriptions/current`, {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${localStorage.getItem('token')}`
+          }
+        })
+
+        const text = await response.text()
+        const data = text ? JSON.parse(text) : null
+
+        if (data.success) {
+          setCurrentSubscription(data.subscription)
+          setPlanName(data.subscription.planName)
+        }
+      } catch (error) {
+        console.error('Error fetching current subscription:', error)
+      }
+    }
+
+    fetchCurrentSubscription()
+  }, [])
+
+  // Add refresh function for subscription updates
+  const refreshSubscription = async () => {
+    try {
+      const response = await fetch(`${API_BASE}/api/subscriptions/current`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        }
+      })
+
+      const text = await response.text()
+      const data = text ? JSON.parse(text) : null
+
+      if (data.success) {
+        setCurrentSubscription(data.subscription)
+        setPlanName(data.subscription.planName)
+        console.log('✅ Subscription refreshed successfully:', data.subscription)
+      }
+    } catch (error) {
+      console.error('Error refreshing subscription:', error)
+    }
+  }
+
+  // Make refresh function available globally
+  useEffect(() => {
+    window.refreshSubscription = refreshSubscription
+    
+    // Listen for subscription refresh events
+    const handleSubscriptionRefresh = () => {
+      console.log('🔄 Subscription refresh event received')
+      refreshSubscription()
+    }
+    
+    window.addEventListener('subscription-refresh', handleSubscriptionRefresh)
+    
+    // Also listen for storage events (for cross-tab updates)
+    const handleStorageChange = (e) => {
+      if (e.key === 'subscription-updated') {
+        console.log('🔄 Storage change event received')
+        refreshSubscription()
+      }
+    }
+    
+    window.addEventListener('storage', handleStorageChange)
+    
+    return () => {
+      window.removeEventListener('subscription-refresh', handleSubscriptionRefresh)
+      window.removeEventListener('storage', handleStorageChange)
+      delete window.refreshSubscription
+    }
+  }, [])
 
   const plans = [
     {
@@ -27,7 +109,7 @@ const SuperAdminSubscription = () => {
     {
       id: 'standard',
       name: 'Standard',
-      price: 50000,
+      price: 1,
       description: 'Great for growing institutions',
       features: [
         '2 Schools/Institutes',
@@ -43,7 +125,7 @@ const SuperAdminSubscription = () => {
     {
       id: 'professional',
       name: 'Professional',
-      price: 60000,
+      price: 1,
       description: 'Complete solution for large institutions',
       features: [
         'Unlimited Schools/Institutes',
@@ -59,9 +141,7 @@ const SuperAdminSubscription = () => {
     }
   ]
 
-  // API base (Vite env variable or fallback)
-const API_BASE = import.meta.env.VITE_BACKEND_URL || 'http://localhost:5002';
-
+  
   const cancelCurrentSubscription = async () => {
     if (!confirm('Are you sure you want to cancel your subscription and downgrade to Free?')) return;
     
@@ -350,12 +430,34 @@ const API_BASE = import.meta.env.VITE_BACKEND_URL || 'http://localhost:5002';
         localStorage.setItem('superadminPlanName', planName);
         localStorage.setItem('superadminSubscriptionStatus', 'active');
         
-        alert(`🎉 Congratulations! You have successfully upgraded to the ${planName} Plan!`);
+        // Trigger subscription refresh event
+        window.dispatchEvent(new CustomEvent('subscription-refresh'));
         
-        // Redirect to dashboard and refresh to update timer
+        // Also trigger storage event for cross-tab updates
+        localStorage.setItem('subscription-updated', Date.now().toString());
         setTimeout(() => {
-          window.location.href = '/superadmin/dashboard';
-        }, 1000);
+          localStorage.removeItem('subscription-updated');
+        }, 100);
+        
+        alert(`? Congratulations! You have successfully upgraded to the ${planName} Plan!`);
+        
+        // Refresh current subscription data immediately
+        setTimeout(() => {
+          console.log('Triggering subscription refresh after payment...');
+          if (window.refreshSubscription) {
+            window.refreshSubscription();
+          }
+          // Also trigger custom event for immediate refresh
+          window.dispatchEvent(new CustomEvent('subscription-refresh'));
+          
+          // Update local state immediately
+          setPlanName(planName);
+          
+          // Redirect to dashboard after showing success
+          setTimeout(() => {
+            window.location.href = '/superadmin/dashboard';
+          }, 2000);
+        }, 500);
       } else {
         alert(`Verification failed: ${verifyData.message}`);
         setLoading(false);

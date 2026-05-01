@@ -178,11 +178,11 @@ export default function AttemptAssessment() {
 
   if (loading) {
     return (
-      <StudentLayout>
+      <StudentLayout><div className="flex-1 overflow-y-auto scrollable-content p-3 sm:p-4 md:p-6">
         <div className="flex justify-center items-center h-96">
           <div className="animate-spin h-10 w-10 border-4 border-primary border-t-transparent rounded-full"></div>
         </div>
-      </StudentLayout>
+      </div></StudentLayout>
     );
   }
 

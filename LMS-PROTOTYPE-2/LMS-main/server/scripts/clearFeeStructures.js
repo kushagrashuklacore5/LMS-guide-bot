@@ -1,4 +1,4 @@
-const db = require('../config/sqlite-db');
+const db = require('../config/database-switch');
 
 db.run('DELETE FROM feeStructures', function(err) {
   if (err) {

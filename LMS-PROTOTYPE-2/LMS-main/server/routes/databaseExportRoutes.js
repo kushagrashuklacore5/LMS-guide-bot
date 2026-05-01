@@ -1,12 +1,12 @@
 const express = require('express');
 const router = express.Router();
-const db = require('../config/sqlite-db');
 const path = require('path');
 const fs = require('fs');
 const translationService = require('../services/translationService');
 const authMiddleware = require('../middleware/authMiddleware');
 const { checkExportAccess } = require('../middleware/quotaMiddleware');
 const { rateLimiters } = require('../middleware/rateLimiter');
+const db = require('../config/database-switch');
 
 // Hardcoded Arabic translations for common field names
 const arabicTranslations = {
@@ -61,7 +61,7 @@ function getArabicFieldName(fieldName) {
 // Get all tables in the database
 router.get('/tables', rateLimiters.sensitive, authMiddleware, checkExportAccess, async (req, res) => {
   try {
-    db.all("SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%'", (err, tables) => {
+    db.all("SELECT table_name FROM information_schema.tables WHERE table_schema = 'public' AND name NOT LIKE 'sqlite_%'", (err, tables) => {
       if (err) {
         return res.status(500).json({ error: 'Error fetching tables' });
       }
@@ -84,7 +84,7 @@ router.get('/table/:tableName/structure', rateLimiters.sensitive, authMiddleware
       return res.status(400).json({ error: 'Invalid table name' });
     }
     
-    db.all(`PRAGMA table_info(${tableName})`, (err, columns) => {
+    db.all(`SELECT column_name, data_type FROM information_schema.columns WHERE table_name = '${tableName})`, (err, columns) => {
       if (err) {
         return res.status(500).json({ error: 'Error fetching table structure' });
       }
@@ -144,7 +144,7 @@ router.get('/table/:tableName/excel', rateLimiters.sensitive, authMiddleware, ch
     }
 
     // Get table structure first
-    db.all(`PRAGMA table_info(${tableName})`, async (err, columns) => {
+    db.all(`SELECT column_name, data_type FROM information_schema.columns WHERE table_name = '${tableName})`, async (err, columns) => {
       if (err) {
         return res.status(500).json({ error: 'Error fetching table structure' });
       }
@@ -283,7 +283,7 @@ router.get('/database/excel', rateLimiters.sensitive, authMiddleware, checkExpor
   try {
     const lang = (req.query.lang || 'en').toLowerCase();
     // Get all tables
-    db.all("SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%'", async (err, tables) => {
+    db.all("SELECT table_name FROM information_schema.tables WHERE table_schema = 'public' AND name NOT LIKE 'sqlite_%'", async (err, tables) => {
       if (err) {
         return res.status(500).json({ error: 'Error fetching tables' });
       }
@@ -316,7 +316,7 @@ router.get('/database/excel', rateLimiters.sensitive, authMiddleware, checkExpor
       
       // Export each table
       tableNames.forEach(tableName => {
-        db.all(`PRAGMA table_info(${tableName})`, async (err, columns) => {
+        db.all(`SELECT column_name, data_type FROM information_schema.columns WHERE table_name = '${tableName})`, async (err, columns) => {
           if (err) {
             completedTables++;
             if (completedTables === tableNames.length) {
@@ -471,7 +471,7 @@ router.get('/database/excel', rateLimiters.sensitive, authMiddleware, checkExpor
 // Get database statistics
 router.get('/stats', rateLimiters.sensitive, authMiddleware, checkExportAccess, async (req, res) => {
   try {
-    db.all("SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%'", (err, tables) => {
+    db.all("SELECT table_name FROM information_schema.tables WHERE table_schema = 'public' AND name NOT LIKE 'sqlite_%'", (err, tables) => {
       if (err) {
         return res.status(500).json({ error: 'Error fetching tables' });
       }

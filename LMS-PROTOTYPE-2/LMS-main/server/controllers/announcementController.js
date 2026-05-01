@@ -1,5 +1,8 @@
-const db = require("../config/sqlite-db");
+const tenantConnectionManager = require('../config/tenant-connection-manager');
 const BilingualDataService = require("../services/BilingualDataService");
+const db = require("../config/database-switch");
+
+
 
 /* ======================================================
    CREATE ANNOUNCEMENT
@@ -9,7 +12,7 @@ const createAnnouncement = async (req, res) => {
     const { title, message, publishFor, courseId } = req.body;
     const userId = req.user.userId;
     const role = req.user.role;
-    const universityId = req.user?.universityId || 1;
+    const universityId = req.user?.universityId || req.user?.university_id || 1;
 
     if (!title || !message) {
       return res.status(400).json({ message: "Title and message required" });
@@ -55,152 +58,40 @@ const createAnnouncement = async (req, res) => {
       announcementData.courseId = courseId;
     }
 
-    // Insert announcement into central announcements table.
-    // Detect which column exists and insert accordingly to avoid failures.
-    db.all("PRAGMA table_info(announcements)", (prErr, cols) => {
-      if (prErr) {
-        console.error("Error inspecting announcements schema:", prErr);
+    // Insert announcement into announcements table using simplified approach
+    const columns = ['title', 'content', 'university_id', 'createdByUser', 'createdByRole'];
+    const values = [announcementData.title, announcementData.content, universityId, userId, role];
+
+    // Add publishFor for admin announcements
+    if (announcementData.publishFor) {
+      columns.push('publishFor');
+      values.push(announcementData.publishFor);
+    }
+
+    // Add courseId for mentor announcements
+    if (announcementData.courseId) {
+      columns.push('courseId');
+      values.push(announcementData.courseId);
+    }
+
+    // Build the INSERT query
+    const placeholders = columns.map(() => '?').join(', ');
+    const insertQuery = `INSERT INTO announcements (${columns.join(', ')}) VALUES (${placeholders})`;
+
+    db.run(insertQuery, values, function(err) {
+      if (err) {
+        console.error("Error creating announcement:", err);
         return res.status(500).json({ message: "Error creating announcement" });
       }
 
-      const colNames = (cols || []).map(c => c.name.toLowerCase());
-      const hasContent = colNames.includes('content');
-      const hasMessage = colNames.includes('message');
-      const hasReadBy = colNames.includes('readby');
-      // Build insert SQL and params based on available columns
-      const columns = ['title'];
-      const values = [announcementData.title];
-
-      // Choose content vs message
-      if (hasContent) {
-        columns.push('content');
-        values.push(announcementData.content);
-      } else if (hasMessage) {
-        columns.push('message');
-        values.push(announcementData.content || announcementData.message);
-      } else {
-        columns.push('content');
-        values.push(announcementData.content);
-      }
-
-      // For admin, publishFor must be set; for mentor it's null (course-specific)
-      if (announcementData.publishFor) {
-        columns.push('publishFor');
-        values.push(announcementData.publishFor);
-      } else if (role === "admin") {
-        // Admin must have publishFor
-        columns.push('publishFor');
-        values.push('students');  // Default to students if somehow missing
-      } else if (role === "mentor") {
-        // Mentor announcements are course-specific, not role-based
-        columns.push('publishFor');
-        values.push(null);  // NULL for course-specific announcements
-      }
-
-      columns.push('courseId');
-      values.push(announcementData.courseId || null);
-
-      columns.push('createdByUser');
-      values.push(announcementData.createdByUser);
-
-      columns.push('createdByRole');
-      values.push(announcementData.createdByRole);
-
-      columns.push('university_id');
-      values.push(announcementData.university_id);
-
-      if (hasReadBy) {
-        columns.push('readBy');
-        values.push(JSON.stringify([]));
-      }
-
-      const placeholders = columns.map(() => '?').join(', ');
-      const insertSQL = `INSERT INTO announcements (${columns.join(', ')}) VALUES (${placeholders})`;
-
-      db.run(insertSQL, values, function(err) {
-        if (err) {
-          console.error("Error creating announcement:", err);
-          return res.status(500).json({ message: "Error creating announcement" });
-        }
-
-        const newAnnouncement = {
+      console.log("✅ Announcement created successfully");
+      res.json({
+        success: true,
+        message: "Announcement created successfully",
+        data: {
           id: this.lastID,
-          title: announcementData.title,
-          content: announcementData.content || announcementData.message,
-          publishFor: announcementData.publishFor || null,
-          courseId: announcementData.courseId || null,
-          createdByUser: userId,
-          createdByRole: role,
-          readBy: hasReadBy ? JSON.stringify([]) : undefined,
-          createdAt: new Date().toISOString(),
-        };
-
-        console.log(`📢 Announcement created:`, newAnnouncement);
-
-        // EMIT SOCKET.IO EVENT FOR REAL-TIME NOTIFICATION
-        if (req.io) {
-          if (role === "admin" && announcementData.publishFor) {
-            const targetAudience = announcementData.publishFor;
-            console.log(`📢 Broadcasting announcement to: ${targetAudience}`);
-            console.log(`📢 Socket.io connected clients count: ${req.io.engine.clientsCount}`);
-
-            const emitPayload = {
-              type: "announcement",
-              data: newAnnouncement,
-              timestamp: new Date().toISOString(),
-            };
-
-            // Emit to specific audience channel
-            if (targetAudience === 'students') {
-              console.log(`  → Emitting to: announcement:students`);
-              req.io.emit('announcement:students', emitPayload);
-              req.io.emit('announcement:student', emitPayload); // legacy
-            } else if (targetAudience === 'mentors') {
-              console.log(`  → Emitting to: announcement:mentors`);
-              req.io.emit('announcement:mentors', emitPayload);
-              req.io.emit('announcement:mentor', emitPayload); // legacy
-              req.io.emit('announcement:faculty', emitPayload); // legacy
-            } else if (targetAudience === 'both') {
-              console.log(`  → Emitting to: announcement:both (students AND mentors)`);
-              // Send to students
-              req.io.emit('announcement:students', emitPayload);
-              req.io.emit('announcement:student', emitPayload); // legacy
-              // Send to mentors
-              req.io.emit('announcement:mentors', emitPayload);
-              req.io.emit('announcement:mentor', emitPayload); // legacy
-              req.io.emit('announcement:faculty', emitPayload); // legacy
-              // Send to both channel
-              req.io.emit('announcement:both', emitPayload);
-            }
-
-            // Always emit general event for backward compatibility
-            req.io.emit("new-announcement", newAnnouncement);
-            console.log(`  → Emitted to: new-announcement`);
-
-            console.log(`✅ Announcement successfully broadcasted to ${targetAudience}`);
-          } else if (role === "mentor") {
-            // Broadcast to specific course
-            console.log(`📢 Mentor announcement to course ${announcementData.courseId}`);
-            req.io.emit(`announcement:course:${announcementData.courseId}`, {
-              type: "announcement",
-              data: newAnnouncement,
-              timestamp: new Date().toISOString()
-            });
-            console.log(`  → Emitted to: announcement:course:${announcementData.courseId}`);
-
-            // Also emit general event
-            req.io.emit("new-announcement", newAnnouncement);
-            console.log(`  → Emitted to: new-announcement`);
-            console.log(`✅ Announcement successfully broadcasted to course ${announcementData.courseId}`);
-          }
-        } else {
-          console.warn(`⚠️ req.io not available - socket events not emitted!`);
+          ...announcementData
         }
-
-        res.status(201).json({
-          message: "Announcement created successfully",
-          announcement: newAnnouncement,
-        });
       });
     });
   } catch (error) {
@@ -216,7 +107,7 @@ const getAllAnnouncements = async (req, res) => {
   try {
     const role = req.user.role;
     const userId = req.user.userId;
-    const universityId = req.user?.universityId || 1;
+    const universityId = req.user?.universityId || req.user?.university_id || 1;
 
     let query = `
       SELECT a.*, u.name as createdByUserName
@@ -269,8 +160,8 @@ const getAllAnnouncements = async (req, res) => {
         readBy: announcement.readBy || '[]' // Ensure readBy field exists
       }));
 
-      // Format announcements according to language
-      const language = req.language || 'en';
+      // Format announcements according to language (fallback to 'en' if not provided)
+      const language = req.language || req.headers['accept-language'] || 'en';
       const formatted = BilingualDataService.formatAnnouncements(processedAnnouncements, language);
 
       console.log(`📋 Retrieved ${formatted.length} announcements for ${role}`);

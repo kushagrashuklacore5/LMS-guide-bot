@@ -43,14 +43,24 @@ module.exports = (req, res, next) => {
             return next();
           } catch (tokenError) {
             console.log("Auth - Invalid token:", tokenError.message);
-            // Fall through to set default user
+            console.log("Auth - Token was:", token.substring(0, 20) + "...");
+            // For superadmin routes, don't fall through to guest
+            if (req.originalUrl && req.originalUrl.includes('/superadmin/')) {
+              return res.status(401).json({ success: false, message: "Invalid authentication token" });
+            }
+            // Fall through to set default user for other routes
           }
         }
       }
     }
 
-    // No valid token - set a user with available info or default
-    // This allows the app to work with or without authentication
+    // No valid token - check if this is a superadmin route
+    if (req.originalUrl && req.originalUrl.includes('/superadmin/')) {
+      console.log("Auth - Superadmin route requires authentication");
+      return res.status(401).json({ success: false, message: "Authentication required" });
+    }
+
+    // Set a user with available info or default for non-superadmin routes
     req.user = {
       userId: null,
       role: "guest",

@@ -1,5 +1,10 @@
 const crypto = require('crypto');
-const db = require('../config/sqlite-db');
+
+// Helper function to get database from request context or fallback to master
+function getDatabaseFromRequest(req) {
+  return req.tenant?.database || require('../config/database-switch');
+}
+
 
 // OTP Service for password reset
 class OTPService {
@@ -15,12 +20,12 @@ class OTPService {
   }
 
   // Store OTP in database
-  async storeOTP(email, otp) {
+  async storeOTP(req, email, otp) {
     return new Promise((resolve, reject) => {
       const expiresAt = new Date(Date.now() + this.otpExpiry).toISOString();
       
       // Delete any existing OTP for this email first
-      db.run(
+      getDatabaseFromRequest(req).run(
         'DELETE FROM otp_reset WHERE email = ?',
         [email],
         (err) => {
@@ -29,7 +34,7 @@ class OTPService {
           }
 
           // Insert new OTP
-          db.run(
+          getDatabaseFromRequest(req).run(
             'INSERT INTO otp_reset (email, otp, expires_at, attempts, created_at) VALUES (?, ?, ?, ?, ?)',
             [email, otp, expiresAt, 0, new Date().toISOString()],
             function(err) {
@@ -45,9 +50,9 @@ class OTPService {
   }
 
   // Verify OTP
-  async verifyOTP(email, otp) {
+  async verifyOTP(req, email, otp) {
     return new Promise((resolve, reject) => {
-      db.get(
+      getDatabaseFromRequest(req).get(
         'SELECT * FROM otp_reset WHERE email = ? AND otp = ? AND expires_at > datetime("now")',
         [email, otp],
         (err, row) => {
@@ -65,7 +70,7 @@ class OTPService {
           }
 
           // Increment attempts
-          db.run(
+          getDatabaseFromRequest(req).run(
             'UPDATE otp_reset SET attempts = attempts + 1 WHERE id = ?',
             [row.id],
             (err) => {
@@ -74,7 +79,7 @@ class OTPService {
               }
 
               // Mark as verified
-              db.run(
+              getDatabaseFromRequest(req).run(
                 'UPDATE otp_reset SET verified = 1 WHERE id = ?',
                 [row.id],
                 (err) => {
@@ -93,9 +98,9 @@ class OTPService {
   }
 
   // Check if email can request new OTP (cooldown)
-  async canRequestOTP(email) {
+  async canRequestOTP(req, email) {
     return new Promise((resolve, reject) => {
-      db.get(
+      getDatabaseFromRequest(req).get(
         'SELECT created_at FROM otp_reset WHERE email = ? ORDER BY created_at DESC LIMIT 1',
         [email],
         (err, row) => {
@@ -123,9 +128,9 @@ class OTPService {
   }
 
   // Check if OTP is verified for password reset
-  async isOTPVerified(email) {
+  async isOTPVerified(req, email) {
     return new Promise((resolve, reject) => {
-      db.get(
+      getDatabaseFromRequest(req).get(
         'SELECT verified FROM otp_reset WHERE email = ? AND verified = 1 AND expires_at > datetime("now")',
         [email],
         (err, row) => {
@@ -140,9 +145,9 @@ class OTPService {
   }
 
   // Cleanup expired OTPs
-  async cleanupExpiredOTPs() {
+  async cleanupExpiredOTPs(req) {
     return new Promise((resolve, reject) => {
-      db.run(
+      getDatabaseFromRequest(req).run(
         'DELETE FROM otp_reset WHERE expires_at <= datetime("now")',
         [],
         function(err) {
@@ -156,9 +161,9 @@ class OTPService {
   }
 
   // Clear OTP after successful password reset
-  async clearOTP(email) {
+  async clearOTP(req, email) {
     return new Promise((resolve, reject) => {
-      db.run(
+      getDatabaseFromRequest(req).run(
         'DELETE FROM otp_reset WHERE email = ?',
         [email],
         function(err) {

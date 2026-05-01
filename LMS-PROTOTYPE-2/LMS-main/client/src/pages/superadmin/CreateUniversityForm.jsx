@@ -1,50 +1,23 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useAuth } from "../../auth/auth";
-import { useTranslation } from "../../context/TranslationContext";
 import { toast } from "react-toastify";
-import { Building2, MapPin, User, Mail, Key, Copy } from "lucide-react";
+import { Building2, MapPin, Mail } from "lucide-react";
 
 const CreateUniversityForm = ({ onSuccess }) => {
   const { API, token } = useAuth();
-  const { t } = useTranslation();
   const [form, setForm] = useState({
-    universityName: "",
-    area: "",
-    adminName: "",
-    adminEmail: "",
+    name: "",
+    address: "",
+    city: "",
+    country: "",
+    email: "",
+    phone: "",
   });
 
-  const [generatedPassword, setGeneratedPassword] = useState(null);
-  const [countdown, setCountdown] = useState(5);
   const [loading, setLoading] = useState(false);
-
-  // Set up countdown timer
-  useEffect(() => {
-    if (!generatedPassword) return;
-
-    // Reset countdown to 5 when password is set
-    setCountdown(5);
-
-    const timer = setInterval(() => {
-      setCountdown((prev) => {
-        if (prev <= 1) {
-          setGeneratedPassword(null);
-          return 0;
-        }
-        return prev - 1;
-      });
-    }, 1000);
-
-    return () => clearInterval(timer);
-  }, [generatedPassword]);
 
   const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });
-  };
-
-  const copyPasswordToClipboard = () => {
-    navigator.clipboard.writeText(generatedPassword);
-    toast.success("✅ Password copied to clipboard!");
   };
 
   const handleCreate = async (e) => {
@@ -53,11 +26,15 @@ const CreateUniversityForm = ({ onSuccess }) => {
     try {
       setLoading(true);
 
+      // Get token directly from localStorage as fallback
+      const directToken = localStorage.getItem('token');
+      const tokenToUse = token || directToken;
+      
       const res = await fetch(`${API}/superadmin/create-university`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
+          Authorization: `Bearer ${tokenToUse}`,
         },
         body: JSON.stringify(form),
       });
@@ -65,14 +42,15 @@ const CreateUniversityForm = ({ onSuccess }) => {
       const data = await res.json();
       if (!res.ok) throw new Error(data.message);
 
-      setGeneratedPassword(data.generatedPassword);
       toast.success("✅ University created successfully!");
 
       setForm({
-        universityName: "",
-        area: "",
-        adminName: "",
-        adminEmail: "",
+        name: "",
+        address: "",
+        city: "",
+        country: "",
+        email: "",
+        phone: "",
       });
 
       setTimeout(() => {
@@ -119,10 +97,10 @@ const CreateUniversityForm = ({ onSuccess }) => {
                   <div className="relative">
                     <Building2 className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
                     <input
-                      name="universityName"
+                      name="name"
                       placeholder="e.g., Tech Institute"
                       className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all text-gray-900 placeholder-gray-500"
-                      value={form.universityName}
+                      value={form.name}
                       onChange={handleChange}
                       required
                     />
@@ -131,67 +109,89 @@ const CreateUniversityForm = ({ onSuccess }) => {
 
                 <div className="space-y-2">
                   <label className="block text-sm font-medium text-gray-700">
-                    Area / Location <span className="text-red-500">*</span>
+                    Address
                   </label>
                   <div className="relative">
                     <MapPin className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
                     <input
-                      name="area"
-                      placeholder="e.g., New York, USA"
+                      name="address"
+                      placeholder="e.g., 123 Main Street"
                       className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all text-gray-900 placeholder-gray-500"
-                      value={form.area}
+                      value={form.address}
                       onChange={handleChange}
-                      required
+                    />
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <label className="block text-sm font-medium text-gray-700">
+                    City
+                  </label>
+                  <div className="relative">
+                    <MapPin className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
+                    <input
+                      name="city"
+                      placeholder="e.g., New York"
+                      className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all text-gray-900 placeholder-gray-500"
+                      value={form.city}
+                      onChange={handleChange}
                     />
                   </div>
                 </div>
               </div>
-            </div>
 
-            {/* Administrator Information */}
-            <div>
-              <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
-                <User className="text-purple-600" size={20} />
-                Administrator Information
-              </h3>
-              
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-6">
                 <div className="space-y-2">
                   <label className="block text-sm font-medium text-gray-700">
-                    Admin Name <span className="text-red-500">*</span>
+                    Country
                   </label>
                   <div className="relative">
-                    <User className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
+                    <MapPin className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
                     <input
-                      name="adminName"
-                      placeholder="e.g., John Smith"
+                      name="country"
+                      placeholder="e.g., USA"
                       className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all text-gray-900 placeholder-gray-500"
-                      value={form.adminName}
+                      value={form.country}
                       onChange={handleChange}
-                      required
                     />
                   </div>
                 </div>
 
                 <div className="space-y-2">
                   <label className="block text-sm font-medium text-gray-700">
-                    Admin Email <span className="text-red-500">*</span>
+                    Email
                   </label>
                   <div className="relative">
                     <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
                     <input
-                      name="adminEmail"
+                      name="email"
                       type="email"
                       placeholder="admin@institute.edu"
                       className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all text-gray-900 placeholder-gray-500"
-                      value={form.adminEmail}
+                      value={form.email}
                       onChange={handleChange}
-                      required
+                    />
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <label className="block text-sm font-medium text-gray-700">
+                    Phone
+                  </label>
+                  <div className="relative">
+                    <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
+                    <input
+                      name="phone"
+                      placeholder="+1 234 567 8900"
+                      className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all text-gray-900 placeholder-gray-500"
+                      value={form.phone}
+                      onChange={handleChange}
                     />
                   </div>
                 </div>
               </div>
-            </div>
+
+                          </div>
 
             {/* Submit Button */}
             <div className="pt-4">
@@ -216,63 +216,6 @@ const CreateUniversityForm = ({ onSuccess }) => {
           </form>
         </div>
       </div>
-
-      {/* Generated Password Display */}
-      {generatedPassword && (
-        <div className="mt-6 bg-gradient-to-br from-yellow-50 to-orange-50 border-2 border-yellow-400 rounded-2xl p-6 shadow-xl">
-          <div className="flex items-start gap-4">
-            <div className="flex-shrink-0">
-              <div className="w-12 h-12 bg-yellow-500 rounded-xl flex items-center justify-center">
-                <Key className="text-white" size={20} />
-              </div>
-            </div>
-            <div className="flex-1">
-              <div className="flex items-center justify-between mb-3">
-                <div>
-                  <h4 className="font-bold text-gray-900 text-lg">🔐 Admin Credentials Generated</h4>
-                  <p className="text-gray-600">Share these credentials securely with the institute administrator</p>
-                </div>
-                <div className="text-center">
-                  <span className={`inline-flex items-center justify-center w-12 h-12 rounded-full font-bold text-sm ${
-                    countdown <= 2 ? 'bg-red-500 text-white animate-pulse' : 'bg-yellow-500 text-white'
-                  }`}>
-                    {countdown}s
-                  </span>
-                </div>
-              </div>
-              
-              <div className="bg-white rounded-xl p-4 border border-gray-200">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-                  <div>
-                    <p className="text-sm text-gray-500 mb-1">Email</p>
-                    <p className="font-semibold text-gray-900">{form.adminEmail}</p>
-                  </div>
-                  <div>
-                    <p className="text-sm text-gray-500 mb-1">Password</p>
-                    <p className="font-mono font-bold text-lg text-blue-600">{generatedPassword}</p>
-                  </div>
-                </div>
-                
-                <div className="flex items-center gap-3">
-                  <button
-                    type="button"
-                    onClick={copyPasswordToClipboard}
-                    className="flex-1 bg-yellow-500 hover:bg-yellow-600 text-white font-semibold py-3 rounded-xl transition-all duration-300 flex items-center justify-center gap-2"
-                  >
-                    <Copy size={18} />
-                    Copy Password
-                  </button>
-                </div>
-              </div>
-              
-              <p className="text-xs text-orange-600 mt-3 flex items-center gap-1">
-                <span>⚠️</span>
-                This password will disappear in {countdown} seconds. Copy it now!
-              </p>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 };

@@ -5,7 +5,7 @@ console.log('🔍 CHECKING FOR EXISTING PAYMENTS...');
 console.log('==================================');
 
 // Check if payments table exists and has data
-db.all("SELECT name FROM sqlite_master WHERE type='table' AND name='payments'", (err, tables) => {
+db.all("SELECT table_name FROM information_schema.tables WHERE table_schema = 'public' AND name='payments'", (err, tables) => {
   if (err) {
     console.error('Error checking payments table:', err);
     return;

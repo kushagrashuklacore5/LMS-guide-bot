@@ -1,4 +1,4 @@
-const db = require('../config/sqlite-db');
+const db = require('../config/database-switch');
 
 // Add password field to vendors table
 function addPasswordToVendorsTable() {

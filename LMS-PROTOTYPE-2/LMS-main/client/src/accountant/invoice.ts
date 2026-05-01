@@ -22,12 +22,12 @@ export function generateInvoicePdf(payload: {
   doc.setFillColor(headerColor[0], headerColor[1], headerColor[2]);
   doc.rect(0, 0, 210, 100, 'F');
 
-  // Try to load and add logo image - enlarged and centered
+  // Try to load and add Core5 logo - centered at top
   try {
-    const logoPath = '/White Logo.png';
-    doc.addImage(logoPath, "PNG", 70, 5, 70, 60);
+    const logoPath = '/core5-logo-new.png';
+    doc.addImage(logoPath, "PNG", 75, 10, 60, 40);
   } catch (e) {
-    console.log('Logo image not available');
+    console.log('Core5 logo image not available');
   }
 
   // Address in header - below logo

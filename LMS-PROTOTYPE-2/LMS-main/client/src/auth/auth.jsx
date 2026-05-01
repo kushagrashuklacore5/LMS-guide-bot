@@ -5,7 +5,7 @@ import { getStorageItem, setStorageItem, removeStorageItem, getBrowserInfo } fro
 const AuthContext = createContext();
 
 // Get API URL from environment or use default
-const API = import.meta.env.VITE_BACKEND_URL || 'http://127.0.0.1:5002/api';
+const API = import.meta.env.VITE_BACKEND_URL || 'http://localhost:5002/api';
 
 // Derive socket URL (strip trailing /api if present)
 const SOCKET_URL = API.replace(/\/api\/?$/, '');

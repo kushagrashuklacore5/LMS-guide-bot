@@ -17,7 +17,7 @@ class EmailService {
         EMAIL_SERVICE: process.env.EMAIL_SERVICE || 'gmail',
         EMAIL_USER: process.env.EMAIL_USER,
         EMAIL_PASS: process.env.EMAIL_PASS,
-        EMAIL_FROM: process.env.EMAIL_FROM || 'Core5 Academy <noreply@core5academy.com>'
+        EMAIL_FROM: process.env.EMAIL_FROM || 'Core5 Academy <support@core5.co.in>'
       };
       
       console.log('✅ Email configuration loaded from environment variables');
@@ -34,7 +34,7 @@ class EmailService {
       EMAIL_SERVICE: 'gmail',
       EMAIL_USER: 'noreply@core5academy.com',
       EMAIL_PASS: 'fallback-password',
-      EMAIL_FROM: 'Core5 Academy <noreply@core5academy.com>'
+      EMAIL_FROM: 'Core5 Academy <support@core5.co.in>'
     };
   }
 
@@ -213,7 +213,7 @@ class EmailService {
       `;
 
       const mailOptions = {
-        from: this.config.EMAIL_FROM || '"Core5 Academy" <noreply@core5academy.com>',
+        from: this.config.EMAIL_FROM || '"Core5 Academy" <support@core5.co.in>',
         to: email,
         subject: '🔐 Password Reset OTP - Core5 Academy',
         html: htmlContent

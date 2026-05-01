@@ -111,20 +111,20 @@ const Courses = () => {
 
   if (loading) {
     return (
-      <StudentLayout>
-        <div className="min-h-screen bg-background flex items-center justify-center">
+      <StudentLayout><div className="flex-1 overflow-y-auto scrollable-content p-3 sm:p-4 md:p-6">
+        <div className="min-min-h-screen bg-background flex items-center justify-center">
           <div className="text-center">
             <div className="w-12 h-12 border-3 border-primary/30 border-t-primary rounded-full animate-spin mx-auto"></div>
             <p className="mt-4 text-text/60">{t('loading_courses')}</p>
           </div>
         </div>
-      </StudentLayout>
+      </div></StudentLayout>
     );
   }
 
   return (
     <StudentLayout>
-      <div className="min-h-screen bg-background">
+      <div className="min-min-h-screen bg-background">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
           {/* Header */}
           <div className="mb-8">

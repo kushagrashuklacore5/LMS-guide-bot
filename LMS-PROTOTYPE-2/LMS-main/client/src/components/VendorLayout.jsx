@@ -13,7 +13,7 @@ import {
 } from 'lucide-react';
 import { useAuth } from '../auth/auth';
 import LoginFooter from './LoginFooter';
-import whiteLogo from '../../../White Logo.png';
+import whiteLogo from '../../../core5 logo new new-modified (1).png';
 
 const VendorLayout = ({ children }) => {
   const location = useLocation();

@@ -1,4 +1,4 @@
-const db = require('./config/sqlite-db');
+const db = require('config/database-switch');
 
 setTimeout(() => {
   console.log('\n📚 Creating Test Classrooms...\n');

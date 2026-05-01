@@ -1,11 +1,11 @@
-const db = require('./config/sqlite-db');
+const db = require('config/database-switch');
 
 console.log('🔧 Setting up Internal Admin Portal database schema...');
 
 // Check and add required columns for superadmin subscription management
 const checkAndAddColumns = () => {
   // Check if expires_at column exists
-  db.all("PRAGMA table_info(users)", [], (err, columns) => {
+  db.all("SELECT column_name, data_type FROM information_schema.columns WHERE table_name = 'users)", [], (err, columns) => {
     if (err) {
       console.error('❌ Error checking table info:', err);
       return;

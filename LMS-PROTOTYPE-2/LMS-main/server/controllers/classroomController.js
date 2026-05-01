@@ -1,4 +1,7 @@
-const db = require("../config/sqlite-db");
+const tenantConnectionManager = require('../config/tenant-connection-manager');
+const db = require('../config/database-switch');
+
+
 
 /* ================= DEBUG: CREATE TEST ASSIGNMENT ================= */
 const createTestAssignment = async (req, res) => {
@@ -47,7 +50,7 @@ const createTestAssignment = async (req, res) => {
 const getAssignedClassrooms = async (req, res) => {
   try {
     // Get user ID - handle both authenticated and default users
-    let teacherId = req.user?.userId;
+    let teacherId = req.user?.id;
     
     console.log("GET ASSIGNED CLASSROOMS - User:", req.user, "TeacherId:", teacherId);
     
@@ -935,7 +938,7 @@ const getClassroomFeeStructure = async (req, res) => {
 /* ================= GET STUDENT CLASSROOMS ================= */
 const getStudentClassrooms = async (req, res) => {
   try {
-    const studentId = req.user.userId;
+    const studentId = req.user.id;
     console.log("getStudentClassrooms - Student ID:", studentId);
     console.log("getStudentClassrooms - Full user object:", req.user);
 

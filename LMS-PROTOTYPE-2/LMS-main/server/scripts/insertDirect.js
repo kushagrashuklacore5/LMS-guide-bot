@@ -1,4 +1,4 @@
-const db = require('../config/sqlite-db');
+const db = require('../config/database-switch');
 
 const stmt = `INSERT INTO announcements (title, message, publishFor, courseId, createdByUser, createdByRole, readBy) VALUES (?, ?, ?, ?, ?, ?, ?)`;
 const params = ['Direct insert test', 'Inserted directly into DB', 'students', null, 1, 'admin', JSON.stringify([])];

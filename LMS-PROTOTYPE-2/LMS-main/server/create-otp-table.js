@@ -1,5 +1,5 @@
 // Create OTP reset table
-const db = require('./config/sqlite-db');
+const db = require('config/database-switch');
 
 const createOTPTable = () => {
   const createTableSQL = `

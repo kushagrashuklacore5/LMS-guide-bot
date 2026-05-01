@@ -146,7 +146,7 @@ const VendorStock = () => {
       </div>
 
       {/* Stock Cards Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+      <div className="responsive-grid">
         {stockItems.map((item) => {
           const stockStatus = getStockStatus(item.quantity, item.min_stock || 10);
           
@@ -161,7 +161,7 @@ const VendorStock = () => {
               </div>
               
               {/* Card Content */}
-              <div className="p-4">
+              <div className="responsive-card-content">
                 <div className="flex items-start justify-between mb-3">
                   <div className="flex items-center space-x-2">
                     <Package className="w-5 h-5 text-gray-400" />

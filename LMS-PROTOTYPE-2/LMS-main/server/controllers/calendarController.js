@@ -1,4 +1,7 @@
-const db = require("../config/sqlite-db");
+const tenantConnectionManager = require('../config/tenant-connection-manager');
+const db = require('../config/database-switch');
+
+
 
 /**
  * ==================================

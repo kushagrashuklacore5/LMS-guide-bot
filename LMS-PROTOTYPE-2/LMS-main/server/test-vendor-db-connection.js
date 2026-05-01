@@ -12,7 +12,7 @@ console.log('📁 Database Path:', dbPath);
 
 // Check tables
 console.log('\n📋 Checking Database Tables...');
-db.all("SELECT name FROM sqlite_master WHERE type='table'", [], (err, tables) => {
+db.all("SELECT table_name FROM information_schema.tables WHERE table_schema = 'public'", [], (err, tables) => {
   if (err) {
     console.error('❌ Error checking tables:', err);
     return;
@@ -35,7 +35,7 @@ db.all("SELECT name FROM sqlite_master WHERE type='table'", [], (err, tables) =>
   
   // Check invoices table structure
   console.log('\n📄 Invoices Table Structure:');
-  db.all('PRAGMA table_info(invoices)', [], (err, columns) => {
+  db.all('SELECT column_name, data_type FROM information_schema.columns WHERE table_name = 'invoices)', [], (err, columns) => {
     if (err) {
       console.error('❌ Error checking invoices table:', err);
     } else {

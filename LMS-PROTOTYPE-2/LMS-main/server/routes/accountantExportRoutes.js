@@ -1,8 +1,16 @@
 const express = require('express');
 const router = express.Router();
-const db = require('../config/sqlite-db');
 const path = require('path');
 const fs = require('fs');
+
+
+
+
+// Helper function to get database from request context or fallback to master
+function getDatabaseFromRequest(req) {
+  return req.tenant?.database || require('../config/database-switch');
+}
+
 
 // Define accountant-specific tables (finance-related only)
 const ACCOUNTANT_TABLES = [
@@ -22,7 +30,7 @@ const ACCOUNTANT_TABLES = [
 router.get('/tables', async (req, res) => {
   try {
     // Get all tables first
-    db.all("SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%'", (err, allTables) => {
+    getDatabaseFromRequest(req).all("SELECT table_name FROM information_schema.tables WHERE table_schema = 'public' AND name NOT LIKE 'sqlite_%'", (err, allTables) => {
       if (err) {
         return res.status(500).json({ error: 'Error fetching tables' });
       }
@@ -52,7 +60,7 @@ router.get('/table/:tableName/structure', async (req, res) => {
       return res.status(400).json({ error: 'Access denied: Table not available for accountant' });
     }
     
-    db.all(`PRAGMA table_info(${tableName})`, (err, columns) => {
+    getDatabaseFromRequest(req).all(`SELECT column_name, data_type FROM information_schema.columns WHERE table_name = '${tableName})`, (err, columns) => {
       if (err) {
         return res.status(500).json({ error: 'Error fetching table structure' });
       }
@@ -101,13 +109,13 @@ router.get('/table/:tableName/data', async (req, res) => {
       ? `SELECT COUNT(*) as total FROM ${tableName}`
       : `SELECT COUNT(*) as total FROM ${tableName}`;
     
-    db.get(countQuery, (err, countResult) => {
+    getDatabaseFromRequest(req).get(countQuery, (err, countResult) => {
       if (err) {
         return res.status(500).json({ error: 'Error fetching data count' });
       }
       
       // Get data
-      db.all(query, params, (err, rows) => {
+      getDatabaseFromRequest(req).all(query, params, (err, rows) => {
         if (err) {
           return res.status(500).json({ error: 'Error fetching table data' });
         }
@@ -136,7 +144,7 @@ router.get('/table/:tableName/excel', async (req, res) => {
     }
     
     // Get table structure first
-    db.all(`PRAGMA table_info(${tableName})`, (err, columns) => {
+    getDatabaseFromRequest(req).all(`SELECT column_name, data_type FROM information_schema.columns WHERE table_name = '${tableName})`, (err, columns) => {
       if (err) {
         return res.status(500).json({ error: 'Error fetching table structure' });
       }
@@ -151,7 +159,7 @@ router.get('/table/:tableName/excel', async (req, res) => {
       }
       
       // Get all data
-      db.all(query, (err, rows) => {
+      getDatabaseFromRequest(req).all(query, (err, rows) => {
         if (err) {
           return res.status(500).json({ error: 'Error fetching table data' });
         }
@@ -209,11 +217,11 @@ router.get('/database/excel', async (req, res) => {
     // Export each accountant table
     ACCOUNTANT_TABLES.forEach(tableName => {
       // Check if table exists
-      db.get(`SELECT name FROM sqlite_master WHERE type='table' AND name=?`, [tableName], (err, tableExists) => {
+      getDatabaseFromRequest(req).get(`SELECT table_name FROM information_schema.tables WHERE table_schema = 'public' AND name=?`, [tableName], (err, tableExists) => {
         completedTables++;
         
         if (!err && tableExists) {
-          db.all(`PRAGMA table_info(${tableName})`, (err, columns) => {
+          getDatabaseFromRequest(req).all(`SELECT column_name, data_type FROM information_schema.columns WHERE table_name = '${tableName})`, (err, columns) => {
             if (!err) {
               let columnNames = columns.map(col => col.name);
               let query = `SELECT * FROM ${tableName}`;
@@ -224,7 +232,7 @@ router.get('/database/excel', async (req, res) => {
                 query = `SELECT id, name, role, isApproved, classroom_id, createdAt, updatedAt FROM ${tableName}`;
               }
               
-              db.all(query, (err, rows) => {
+              getDatabaseFromRequest(req).all(query, (err, rows) => {
                 if (!err && rows.length > 0) {
                   // Add table header
                   combinedCsv += `TABLE: ${tableName.toUpperCase()} (${rows.length} records)\n`;
@@ -301,7 +309,7 @@ router.get('/stats', async (req, res) => {
     
     // Get table counts
     ACCOUNTANT_TABLES.forEach(tableName => {
-      db.get(`SELECT COUNT(*) as count FROM ${tableName}`, (err, result) => {
+      getDatabaseFromRequest(req).get(`SELECT COUNT(*) as count FROM ${tableName}`, (err, result) => {
         completedTables++;
         
         if (!err) {
@@ -312,27 +320,27 @@ router.get('/stats', async (req, res) => {
           // Calculate finance summary
           Promise.all([
             new Promise(resolve => {
-              db.get('SELECT SUM(amount) as total FROM payments WHERE status="completed"', (err, result) => {
+              getDatabaseFromRequest(req).get('SELECT SUM(amount) as total FROM payments WHERE status="completed"', (err, result) => {
                 resolve(result?.total || 0);
               });
             }),
             new Promise(resolve => {
-              db.get('SELECT SUM(amount) as total FROM expenses', (err, result) => {
+              getDatabaseFromRequest(req).get('SELECT SUM(amount) as total FROM expenses', (err, result) => {
                 resolve(result?.total || 0);
               });
             }),
             new Promise(resolve => {
-              db.get('SELECT SUM(totalFee) as total FROM feeStructures', (err, result) => {
+              getDatabaseFromRequest(req).get('SELECT SUM(totalFee) as total FROM feeStructures', (err, result) => {
                 resolve(result?.total || 0);
               });
             }),
             new Promise(resolve => {
-              db.get('SELECT SUM(totalAmount) as total FROM orders', (err, result) => {
+              getDatabaseFromRequest(req).get('SELECT SUM(totalAmount) as total FROM orders', (err, result) => {
                 resolve(result?.total || 0);
               });
             }),
             new Promise(resolve => {
-              db.get('SELECT SUM(quantity * unitPrice) as total FROM inventory', (err, result) => {
+              getDatabaseFromRequest(req).get('SELECT SUM(quantity * unitPrice) as total FROM inventory', (err, result) => {
                 resolve(result?.total || 0);
               });
             })

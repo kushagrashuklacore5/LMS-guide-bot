@@ -133,8 +133,8 @@ const CreateClassroomModal = ({ open, onClose, onSuccess }) => {
   if (!open) return null;
 
   return (
-    <div className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center">
-      <div className="bg-white w-full max-w-md rounded-xl p-5">
+    <div className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4">
+      <div className="bg-white w-full max-w-md rounded-xl p-5 max-h-[90vh] overflow-y-auto">
 
         {/* HEADER */}
         <div className="flex justify-between mb-4">

@@ -1,4 +1,4 @@
-const db = require('../config/sqlite-db');
+const db = require('../config/database-switch');
 const bcrypt = require('bcryptjs');
 
 console.log('=== Testing User Creation & Login Flow ===\n');

@@ -21,36 +21,9 @@ const DatabaseExport = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    (async () => {
-      try {
-        if (!token) {
-          setQuotaDetails({ type: 'feature', resourceType: 'database export', message: 'Please login to access database export.' });
-          setShowQuotaModal(true);
-          return;
-        }
-
-        const res = await fetch(`${API}/api/subscriptions/check-feature-access`, {
-          headers: { Authorization: `Bearer ${token}` }
-        });
-
-        if (!res.ok) throw new Error('Feature check failed');
-
-        const data = await res.json();
-        if (data && data.canExportData === false) {
-          setQuotaDetails({ type: 'feature', resourceType: 'database export', message: 'Your account is on the Free plan — upgrade to access database export.' });
-          setShowQuotaModal(true);
-          return;
-        }
-
-        // allowed
-        fetchTables();
-        fetchStats();
-      } catch (err) {
-        console.error('Feature check error', err);
-        setQuotaDetails({ type: 'feature', resourceType: 'database export', message: 'Your account is on the Free plan — upgrade to access database export.' });
-        setShowQuotaModal(true);
-      }
-    })();
+    // DISABLED: Allow all users to access database export without restrictions
+    fetchTables();
+    fetchStats();
   }, []);
 
   const fetchTables = async () => {
@@ -134,21 +107,21 @@ const DatabaseExport = () => {
   };
 
   const downloadTableExcel = (tableName) => {
-    if (showQuotaModal) return;
+    // DISABLED: Allow all downloads without quota restrictions
     setExportStatus({ type: 'info', message: `Downloading ${tableName} data...` });
     window.open(`${API}/database-export/table/${tableName}/excel?token=${token}&lang=${exportLang}`, '_blank');
     setTimeout(() => {
-      setExportStatus({ type: 'success', message: `${tableName} export completed!` });
+      setExportStatus({ type: 'success', message: `Downloaded ${tableName} data successfully!` });
     }, 2000);
   };
 
   const downloadFullDatabase = () => {
-    if (showQuotaModal) return;
+    // DISABLED: Allow all downloads without quota restrictions
     setExportStatus({ type: 'info', message: 'Downloading full database...' });
     window.open(`${API}/database-export/database/excel?token=${token}&lang=${exportLang}`, '_blank');
     setTimeout(() => {
-      setExportStatus({ type: 'success', message: 'Full database export completed!' });
-    }, 3000);
+      setExportStatus({ type: 'success', message: 'Full database downloaded successfully!' });
+    }, 2000);
   };
 
   const refreshData = () => {

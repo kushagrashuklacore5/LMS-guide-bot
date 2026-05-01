@@ -1,4 +1,4 @@
-const db = require('./config/sqlite-db');
+const db = require('config/database-switch');
 
 console.log('=== Checking course_students table ===');
 db.all('SELECT * FROM course_students', (err, rows) => {

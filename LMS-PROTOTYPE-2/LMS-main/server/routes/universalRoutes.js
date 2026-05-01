@@ -3,7 +3,7 @@
 
 const express = require('express');
 const router = express.Router();
-const db = require('../config/sqlite-db');
+const db = require('../config/database-switch');
 const authMiddleware = require('../middleware/authMiddleware');
 const { checkExportAccess, checkCalendarAccess } = require('../middleware/quotaMiddleware');
 const { processBilingualInput } = require('../utils/bilingualHelper');

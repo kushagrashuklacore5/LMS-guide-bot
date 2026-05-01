@@ -1,5 +1,5 @@
 // Check current SuperAdmin plans
-const db = require('./config/sqlite-db');
+const db = require('config/database-switch');
 
 console.log('🔍 Checking Current SuperAdmin Plans\n');
 

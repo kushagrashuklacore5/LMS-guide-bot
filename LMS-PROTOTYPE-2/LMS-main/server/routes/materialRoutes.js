@@ -42,4 +42,10 @@ router.get(
 );
 
 // ✅ DELETE MATERIAL
+router.delete(
+  "/:id",
+  authMiddleware,
+  materialController.deleteMaterial
+);
+
 module.exports = router;

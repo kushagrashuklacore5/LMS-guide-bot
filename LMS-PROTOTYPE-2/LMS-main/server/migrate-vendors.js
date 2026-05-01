@@ -1,9 +1,9 @@
-const db = require('./config/sqlite-db');
+const db = require('config/database-switch');
 
 console.log('Migrating vendors table to add university_id...');
 
 // Check if university_id column exists
-db.all("PRAGMA table_info(vendors)", (err, result) => {
+db.all("SELECT column_name, data_type FROM information_schema.columns WHERE table_name = 'vendors)", (err, result) => {
   if (err) {
     console.error('Error getting table info:', err);
     process.exit(1);

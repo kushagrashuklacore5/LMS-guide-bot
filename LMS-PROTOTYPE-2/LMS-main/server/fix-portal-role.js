@@ -1,4 +1,4 @@
-const db = require('./config/sqlite-db');
+const db = require('config/database-switch');
 
 console.log('🔧 Removing portal@core5.co.in from superadmin role...');
 

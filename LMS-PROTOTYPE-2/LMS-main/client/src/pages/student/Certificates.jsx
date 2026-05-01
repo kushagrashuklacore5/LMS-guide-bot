@@ -313,7 +313,7 @@ const Certificates = () => {
   if (loading) {
     return (
       <StudentLayout>
-        <div className="min-h-screen bg-background p-4 sm:p-8 flex flex-col items-center justify-center">
+        <div className="min-min-h-screen bg-background p-4 sm:p-8 flex flex-col items-center justify-center">
           <div className="relative">
             <div className="w-16 h-16 sm:w-20 sm:h-20 border-4 border-primary/20 border-t-primary rounded-full animate-spin"></div>
           </div>
@@ -325,7 +325,7 @@ const Certificates = () => {
 
   return (
     <StudentLayout>
-      <div className="min-h-screen bg-background">
+      <div className="min-min-h-screen bg-background">
         {/* Toast Container */}
         <ToastContainer />
 

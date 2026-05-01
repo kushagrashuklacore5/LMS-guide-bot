@@ -8,7 +8,7 @@ console.log('=== Checking Table Structure ===\n');
 
 // Check users table structure
 console.log('1. Checking users table structure...');
-db.all("PRAGMA table_info(users)", (err, columns) => {
+db.all("SELECT column_name, data_type FROM information_schema.columns WHERE table_name = 'users)", (err, columns) => {
   if (err) {
     console.error('Error:', err);
     return;
@@ -21,7 +21,7 @@ db.all("PRAGMA table_info(users)", (err, columns) => {
   
   // Check vendors table structure
   console.log('\n2. Checking vendors table structure...');
-  db.all("PRAGMA table_info(vendors)", (err, vendorColumns) => {
+  db.all("SELECT column_name, data_type FROM information_schema.columns WHERE table_name = 'vendors)", (err, vendorColumns) => {
     if (err) {
       console.error('Error:', err);
       return;

@@ -1,4 +1,4 @@
-const db = require('./config/sqlite-db');
+const db = require('config/database-switch');
 
 const sql = 'SELECT name FROM sqlite_master WHERE type="table" AND name="results"';
 
@@ -10,7 +10,7 @@ db.get(sql, (err, row) => {
 
   if (row) {
     console.log('✓ Results table exists');
-    db.all('PRAGMA table_info(results)', (err2, cols) => {
+    db.all('SELECT column_name, data_type FROM information_schema.columns WHERE table_name = 'results)', (err2, cols) => {
       console.log('Columns:', cols.map(c => c.name).join(', '));
       process.exit(0);
     });
@@ -40,7 +40,7 @@ db.get(sql, (err, row) => {
       } else {
         console.log('✓ Results table created successfully');
         console.log('Table schema:');
-        db.all('PRAGMA table_info(results)', (err4, cols) => {
+        db.all('SELECT column_name, data_type FROM information_schema.columns WHERE table_name = 'results)', (err4, cols) => {
           console.log(cols.map(c => `  - ${c.name} (${c.type})`).join('\n'));
           process.exit(0);
         });

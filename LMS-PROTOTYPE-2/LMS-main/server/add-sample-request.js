@@ -1,4 +1,4 @@
-const db = require('./config/sqlite-db');
+const db = require('config/database-switch');
 
 // Get vendor ID
 db.get('SELECT id FROM vendors WHERE name LIKE "%Dell%" LIMIT 1', (err, vendor) => {

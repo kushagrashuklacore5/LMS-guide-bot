@@ -3,7 +3,7 @@ import { Link, useLocation, useNavigate } from "react-router-dom";
 import { CreditCard, History, Package, LayoutDashboard, Database, LogOut, ChevronLeft, ChevronRight } from 'lucide-react';
 import { useAuth } from "../auth/auth";
 import { useTranslation } from "../context/TranslationContext";
-import whiteLogo from '../../../White Logo.png';
+import whiteLogo from '../../../core5 logo new new-modified (1).png';
 
 const items = [
   { name: "Fees Collection", icon: CreditCard },

@@ -1,5 +1,8 @@
-const db = require("../config/sqlite-db");
+const tenantConnectionManager = require('../config/tenant-connection-manager');
+const db = require('../config/database-switch');
 const ExcelJS = require('exceljs');
+
+
 
 /* ================= MARK ATTENDANCE ================= */
 const markAttendance = async (req, res) => {

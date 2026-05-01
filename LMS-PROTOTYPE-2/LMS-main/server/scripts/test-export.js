@@ -1,4 +1,4 @@
-const db = require('../config/sqlite-db');
+const db = require('../config/database-switch');
 const translationService = require('../services/translationService');
 
 async function runTest(tableName = 'classrooms', lang = 'ar') {
@@ -6,7 +6,7 @@ async function runTest(tableName = 'classrooms', lang = 'ar') {
     await translationService.isServiceAvailable();
 
     const pragma = await new Promise((resolve, reject) => {
-      db.all(`PRAGMA table_info(${tableName})`, (err, cols) => {
+      db.all(`SELECT column_name, data_type FROM information_schema.columns WHERE table_name = '${tableName})`, (err, cols) => {
         if (err) return reject(err);
         resolve(cols.map(c => c.name));
       });

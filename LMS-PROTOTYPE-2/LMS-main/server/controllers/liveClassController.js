@@ -1,6 +1,7 @@
 const LiveClass = require("../models/LiveClass");
 const Course = require("../models/Course");
-const db = require("../config/sqlite-db");
+const tenantConnectionManager = require('../config/tenant-connection-manager');
+const db = require('../config/database-switch');
 const { randomUUID } = require('crypto');
 
 /**
@@ -354,7 +355,7 @@ exports.deleteLiveClass = async (req, res) => {
 exports.getStudentLiveClasses = async (req, res) => {
   try {
     const studentId = req.user.userId;
-    const db = require("../config/sqlite-db");
+    const tenantConnectionManager = require('../config/tenant-connection-manager');
 
     // Get all courses where student is enrolled
     const courseIds = await new Promise((resolve) => {
@@ -414,7 +415,9 @@ exports.joinLiveClass = async (req, res) => {
   try {
     const { liveClassId } = req.params;
     const studentId = req.user.userId;
-    const db = require("../config/sqlite-db");
+    const tenantConnectionManager = require('../config/tenant-connection-manager');
+
+
 
     // Get live class
     const liveClass = await new Promise((resolve) => {

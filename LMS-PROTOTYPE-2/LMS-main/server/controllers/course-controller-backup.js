@@ -1,4 +1,4 @@
-const db = require("../config/sqlite-db");
+const tenantConnectionManager = require('../config/tenant-connection-manager');
 
 /* ================= CREATE COURSE ================= */
 const createCourse = async (req, res) => {
@@ -138,6 +138,8 @@ const getStudentCourses = async (req, res) => {
 
     // Count assessments for each course
     const Assessment = require("../models/Assessment");
+
+
     const coursesWithStats = await Promise.all(courses.map(async (course) => {
       const assessmentCount = await Assessment.countDocuments({ courseId: course._id });
       return {

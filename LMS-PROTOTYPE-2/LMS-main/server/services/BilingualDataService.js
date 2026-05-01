@@ -132,8 +132,8 @@ class BilingualDataService {
     
     return {
       ...announcement,
-      title: announcement[titleField] || announcement.title,
-      content: announcement[contentField] || announcement.content
+      title: announcement[titleField] || announcement.title || 'Untitled',
+      content: announcement[contentField] || announcement.content || ''
     };
   }
 

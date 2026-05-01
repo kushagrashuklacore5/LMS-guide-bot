@@ -14,7 +14,7 @@ import {
 import { useAuth } from "../auth/auth";
 import AnnouncementBell from "./AnnouncementBell";
 import LoginFooter from './LoginFooter';
-import whiteLogo from '../../../White Logo.png';
+import whiteLogo from '../../../core5 logo new new-modified (1).png';
 
 const SuperAdminLayout = ({ children }) => {
   const location = useLocation();
@@ -32,54 +32,94 @@ const SuperAdminLayout = ({ children }) => {
   const [planName, setPlanName] = useState('Free');
 const API_BASE = import.meta.env.VITE_BACKEND_URL || 'http://localhost:5002';
 
+  // Fetch subscription data function
+  const fetchSubscription = async () => {
+    try {
+      const response = await fetch(`${API_BASE}/api/subscriptions/current`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        }
+      });
+
+      const text = await response.text();
+      const data = text ? JSON.parse(text) : null;
+
+      if (data.success) {
+        console.log('Subscription data received:', data.subscription);
+        setSubscription(data.subscription);
+        setPlanName(data.subscription.planName);
+        
+        // Set initial timer based on subscription status and remaining time
+        const remainingSeconds = data.subscription.remainingSeconds;
+        const isActive = data.subscription.status === 'active';
+        
+        if (isActive && remainingSeconds > 0) {
+          // Active subscription with time remaining
+          setTimer(remainingSeconds);
+          setShowPopup(false);
+        } else if (isActive && remainingSeconds <= 0) {
+          // Active subscription but time expired (shouldn't happen but handle it)
+          setShowPopup(true);
+          setTimer(0);
+        } else {
+          // Expired subscription
+          setShowPopup(true);
+          setTimer(0);
+        }
+      } else {
+        console.error('Failed to fetch subscription:', data.message);
+      }
+    } catch (error) {
+      console.error('Error fetching subscription:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   // Fetch subscription data on mount
   useEffect(() => {
-    const fetchSubscription = async () => {
-      try {
-        const response = await fetch(`${API_BASE}/api/subscriptions/current`, {
-          method: 'GET',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${localStorage.getItem('token')}`
-          }
-        });
-
-        const text = await response.text();
-        const data = text ? JSON.parse(text) : null;
-
-        if (data.success) {
-          setSubscription(data.subscription);
-          setPlanName(data.subscription.planName);
-          
-          // Set initial timer based on subscription status and remaining time
-          const remainingSeconds = data.subscription.remainingSeconds;
-          const isActive = data.subscription.status === 'active';
-          
-          if (isActive && remainingSeconds > 0) {
-            // Active subscription with time remaining
-            setTimer(remainingSeconds);
-            setShowPopup(false);
-          } else if (isActive && remainingSeconds <= 0) {
-            // Active subscription but time expired (shouldn't happen but handle it)
-            setShowPopup(true);
-            setTimer(0);
-          } else {
-            // Expired subscription
-            setShowPopup(true);
-            setTimer(0);
-          }
-        } else {
-          console.error('Failed to fetch subscription:', data.message);
-        }
-      } catch (error) {
-        console.error('Error fetching subscription:', error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
     fetchSubscription();
   }, []);
+
+  // Listen for subscription refresh events
+  useEffect(() => {
+    const handleSubscriptionRefresh = () => {
+      console.log('Refreshing subscription data...');
+      fetchSubscription();
+    };
+
+    // Listen for custom event
+    window.addEventListener('subscription-refresh', handleSubscriptionRefresh);
+    
+    // Listen for storage changes (from other tabs)
+    const handleStorageChange = (e) => {
+      if (e.key === 'subscription-updated') {
+        console.log('Subscription updated in another tab, refreshing...');
+        fetchSubscription();
+      }
+    };
+    
+    window.addEventListener('storage', handleStorageChange);
+    
+    return () => {
+      window.removeEventListener('subscription-refresh', handleSubscriptionRefresh);
+      window.removeEventListener('storage', handleStorageChange);
+    };
+  }, []);
+
+  // Global function to refresh subscription
+  useEffect(() => {
+    window.refreshSubscription = () => {
+      console.log('Manual subscription refresh triggered');
+      fetchSubscription();
+    };
+    
+    return () => {
+      delete window.refreshSubscription;
+    };
+  }, [fetchSubscription]);
 
   // Calculate time units
   const days = Math.floor(timer / 86400);
@@ -107,40 +147,7 @@ const API_BASE = import.meta.env.VITE_BACKEND_URL || 'http://localhost:5002';
     return () => clearInterval(interval);
   }, [loading, timer]);
 
-  // Helper function to refresh subscription data
-  const fetchSubscription = async () => {
-    try {
-      const response = await fetch(`${API_BASE}/api/subscriptions/current`, {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
-        }
-      });
-
-      const text = await response.text();
-      const data = text ? JSON.parse(text) : null;
-
-      if (data.success) {
-        setSubscription(data.subscription);
-        setPlanName(data.subscription.planName);
-        
-        const remainingSeconds = data.subscription.remainingSeconds;
-        const isActive = data.subscription.status === 'active';
-        
-        if (isActive && remainingSeconds > 0) {
-          setTimer(remainingSeconds);
-          setShowPopup(false);
-        } else {
-          setTimer(0);
-          setShowPopup(true);
-        }
-      }
-    } catch (error) {
-      console.error('Error refreshing subscription:', error);
-    }
-  };
-
+  
   const handleLogout = () => {
     logoutUser();
     navigate("/login");
@@ -199,6 +206,18 @@ const API_BASE = import.meta.env.VITE_BACKEND_URL || 'http://localhost:5002';
       }
       return location.pathname === item.path && !location.search.includes('tab=');
     })?.name || 'Overview';
+
+  // Show loading screen while initializing
+  if (loading) {
+    return (
+      <div className="h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 overflow-hidden">
@@ -454,10 +473,13 @@ const API_BASE = import.meta.env.VITE_BACKEND_URL || 'http://localhost:5002';
         </header>
 
         {/* Page Content */}
-        <main className="flex-1 overflow-y-auto p-4 lg:p-6">
+        <main className="flex-1 overflow-y-auto scrollable-content p-4 lg:p-6">
           {children}
         </main>
       </div>
+      
+      {/* Footer */}
+      <LoginFooter />
 
       {/* Subscription Expired Popup */}
       {showPopup && timer === 0 && (
@@ -502,9 +524,6 @@ const API_BASE = import.meta.env.VITE_BACKEND_URL || 'http://localhost:5002';
           </div>
         </div>
       )}
-      
-      {/* Footer */}
-      <LoginFooter />
     </div>
   );
 };

@@ -123,7 +123,7 @@ router.get('/users-status/:superadminId', authenticateToken, async (req, res) =>
       });
     }
     
-    const db = require('../config/sqlite-db');
+    
     
     db.all(`
       SELECT u.id, u.name, u.role, u.subscriptionPlan, uni.name as university_name

@@ -5,7 +5,7 @@ console.log('🔍 CHECKING FOR STUDENT DATA...');
 console.log('============================');
 
 // Check all tables again and look for student-related data
-db.all("SELECT name FROM sqlite_master WHERE type='table'", (err, tables) => {
+db.all("SELECT table_name FROM information_schema.tables WHERE table_schema = 'public'", (err, tables) => {
   if (err) {
     console.error('Error checking tables:', err);
     return;
@@ -47,7 +47,7 @@ db.all("SELECT name FROM sqlite_master WHERE type='table'", (err, tables) => {
         });
         
         // Check structure of this table
-        db.all(`PRAGMA table_info(${firstTable})`, (err, columns) => {
+        db.all(`SELECT column_name, data_type FROM information_schema.columns WHERE table_name = '${firstTable})`, (err, columns) => {
           if (err) {
             console.error(`Error getting table info for ${firstTable}:`, err);
             return;

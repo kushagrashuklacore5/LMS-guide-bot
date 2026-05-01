@@ -1,4 +1,4 @@
-const db = require('../config/sqlite-db');
+const db = require('../config/database-switch');
 const { processBilingualInput, retrieveBilingualData } = require('../utils/bilingualHelper');
 
 console.log('=== Testing Language Switching Behavior ===\n');

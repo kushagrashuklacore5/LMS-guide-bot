@@ -4,7 +4,7 @@
  * Run: node server/scripts/clear-announcements.js
  */
 
-const db = require('../config/sqlite-db');
+const db = require('../config/database-switch');
 
 console.log('\n🗑️  Clearing all announcements from database...\n');
 

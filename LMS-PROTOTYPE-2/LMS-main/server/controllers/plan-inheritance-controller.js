@@ -302,8 +302,8 @@ function getPlanFeatures(planType) {
       courses: { max: 8 },
       liveClass: false,            // Restricted - only Professional gets this
       assessments: false,          // Restricted - only Professional gets this
-      weeksPerCourse: Infinity,     // Unlimited for Standard
-      materialsPerCourse: Infinity, // Unlimited for Standard
+      weeksPerCourse: 2,           // Limited - only Professional gets unlimited
+      materialsPerCourse: 2,       // Limited - only Professional gets unlimited
       mentorCoursesPerClass: 2
     },
     professional: {

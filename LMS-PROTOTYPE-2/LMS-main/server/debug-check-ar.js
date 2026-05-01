@@ -1,4 +1,4 @@
-const db = require('./config/sqlite-db');
+const db = require('config/database-switch');
 
 const tablesToCheck = [
   'courses',
@@ -12,7 +12,7 @@ const tablesToCheck = [
 
 function checkTable(table) {
   return new Promise((resolve) => {
-    db.all(`PRAGMA table_info(${table})`, (err, columns) => {
+    db.all(`SELECT column_name, data_type FROM information_schema.columns WHERE table_name = '${table})`, (err, columns) => {
       if (err) return resolve({ table, error: err.message });
 
       const colNames = columns.map(c => c.name);

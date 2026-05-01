@@ -1,5 +1,5 @@
 const planInheritance = require('./controllers/plan-inheritance-controller');
-const db = require('./config/sqlite-db');
+const db = require('config/database-switch');
 
 console.log('🧪 Testing Plan Inheritance System\n');
 console.log('=' .repeat(60));

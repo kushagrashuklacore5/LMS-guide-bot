@@ -25,7 +25,7 @@ const db = new sqlite3.Database(sqlDbPath, (err) => {
 function testTableExists() {
   return new Promise((resolve) => {
     db.all(
-      "SELECT name FROM sqlite_master WHERE type='table' AND name='subscriptions'",
+      "SELECT table_name FROM information_schema.tables WHERE table_schema = 'public' AND name='subscriptions'",
       [],
       (err, rows) => {
         if (err) {
@@ -49,7 +49,7 @@ function testTableExists() {
 function testTableStructure() {
   return new Promise((resolve) => {
     db.all(
-      "PRAGMA table_info(subscriptions)",
+      "SELECT column_name, data_type FROM information_schema.columns WHERE table_name = 'subscriptions)",
       [],
       (err, rows) => {
         if (err) {

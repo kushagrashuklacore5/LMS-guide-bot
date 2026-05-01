@@ -31,20 +31,25 @@ const Attendance = () => {
         const firstClassroom = classrooms[0];
         setClassroomId(firstClassroom.id);
         
-        // Fetch students for this classroom
+        // Fetch all students for attendance
         try {
-          const studentsRes = await fetch(`${API}/classrooms/${firstClassroom.id}/students`, {
+          const studentsRes = await fetch(`${API}/users?role=student`, {
             headers: { Authorization: `Bearer ${token}` },
           });
           const studentsData = await studentsRes.json();
           const studentsList = studentsData.data || studentsData;
           
-          setStudents(Array.isArray(studentsList) ? studentsList : []);
+          // Filter to only show students (not admins, mentors, etc.)
+          const filteredStudents = Array.isArray(studentsList) 
+            ? studentsList.filter(user => user.role === 'student')
+            : [];
+          
+          setStudents(filteredStudents);
 
           // Initialize all as present
           const initialRecords = {};
-          if (Array.isArray(studentsList)) {
-            studentsList.forEach(s => {
+          if (Array.isArray(filteredStudents)) {
+            filteredStudents.forEach(s => {
               initialRecords[s.id || s._id] = "present";
             });
           }

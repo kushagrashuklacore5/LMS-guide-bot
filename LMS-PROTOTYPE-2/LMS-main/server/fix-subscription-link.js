@@ -1,5 +1,5 @@
 // Fix Subscription Link Issue
-const db = require('./config/sqlite-db');
+const db = require('config/database-switch');
 
 console.log('🔧 FIXING SUBSCRIPTION LINK ISSUE');
 console.log('================================');

@@ -1,10 +1,10 @@
-const db = require('./config/sqlite-db');
+const db = require('config/database-switch');
 
 // Test database connection and inventory table
 console.log('Testing database connection...');
 
 // Check if inventory table exists and has the new fields
-db.all("PRAGMA table_info(inventory)", (err, result) => {
+db.all("SELECT column_name, data_type FROM information_schema.columns WHERE table_name = 'inventory)", (err, result) => {
   if (err) {
     console.error('Error getting table info:', err);
     return;

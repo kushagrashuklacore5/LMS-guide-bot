@@ -17,18 +17,23 @@ const CreateEventModal = ({ role, onClose, onSuccess }) => {
     localStorage.getItem("authToken") ||
     localStorage.getItem("unstop_token");
 
-  // ================= L
-  // OAD MENTOR COURSES =================
+  // ================= LOAD MENTOR COURSES =================
   useEffect(() => {
     if (role === "mentor" && token) {
-      const apiUrl = import.meta.env.VITE_API_URL || "";
+      const apiUrl = import.meta.env.VITE_BACKEND_URL || "http://localhost:5002";
+      // Ensure we don't double the /api prefix
+      const baseUrl = apiUrl.endsWith('/api') ? apiUrl.slice(0, -4) : apiUrl;
+      
       axios
-        .get(`${apiUrl}/api/courses/mentor`, {
+        .get(`${baseUrl}/api/courses/mentor`, {
           headers: {
             Authorization: `Bearer ${token}`,
           },
         })
-        .then((res) => setCourses(res.data))
+        .then((res) => {
+          console.log('📚 Mentor courses loaded:', res.data.length, 'courses');
+          setCourses(res.data);
+        })
         .catch((err) => {
           console.error("Failed to load mentor courses", err);
         });
@@ -69,9 +74,12 @@ const CreateEventModal = ({ role, onClose, onSuccess }) => {
         console.log(`📅 Creating mentor event for course: ${courseId}`);
       }
 
-      const apiUrl = import.meta.env.VITE_API_URL || "";
+      const apiUrl = import.meta.env.VITE_BACKEND_URL || "http://localhost:5002";
+      // Ensure we don't double the /api prefix
+      const baseUrl = apiUrl.endsWith('/api') ? apiUrl.slice(0, -4) : apiUrl;
+      
       const res = await axios.post(
-        `${apiUrl}/api/calendar`,
+        `${baseUrl}/api/calendar`,
         payload,
         {
           headers: {
@@ -164,7 +172,7 @@ const CreateEventModal = ({ role, onClose, onSuccess }) => {
             >
               <option value="">Select Course</option>
               {courses.map((course) => (
-                <option key={course._id} value={course._id}>
+                <option key={course.id || course._id} value={course.id || course._id}>
                   {course.title}
                 </option>
               ))}

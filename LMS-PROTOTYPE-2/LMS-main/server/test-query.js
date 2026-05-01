@@ -1,5 +1,5 @@
 const jwt = require('jsonwebtoken');
-const db = require('./config/sqlite-db');
+const db = require('config/database-switch');
 
 // Create a test token
 const token = jwt.sign(
