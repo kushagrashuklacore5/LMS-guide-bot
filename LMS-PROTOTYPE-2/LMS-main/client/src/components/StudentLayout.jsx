@@ -1,20 +1,17 @@
 import React, { useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import {
-  LayoutDashboard,
-  BookOpen,
-  Award,
+  Home,
+  GraduationCap,
+  Trophy,
+  Clock,
   LogOut,
   ChevronLeft,
-  ChevronRight,
-  Calendar,
-  FileText
+  ChevronRight
 } from 'lucide-react';
 import { useAuth } from "../auth/auth";
 import QuotaLimitModal from './QuotaLimitModal';
 import { useTranslation } from "../context/TranslationContext";
-import AnnouncementBell from "./AnnouncementBell";
-import LoginFooter from './LoginFooter';
 import whiteLogo from '../../../core5 logo new new-modified (1).png';
 
 const StudentLayout = ({ children }) => {
@@ -43,43 +40,35 @@ const StudentLayout = ({ children }) => {
     // All features are now accessible to all users
   };
 
-  // Language selector removed from Student portal
-
+  // Enhanced navigation items with newest icons and features
   const navItems = [
     {
       path: '/student/dashboard',
       nameKey: 'nav_dashboard',
-      icon: <LayoutDashboard size={20} />,
+      icon: <Home size={20} />,
+      label: 'Dashboard',
+      description: 'Overview & Stats'
     },
     {
       path: '/student/courses',
       nameKey: 'nav_courses',
-      icon: <BookOpen size={20} />,
+      icon: <GraduationCap size={20} />,
+      label: 'Courses',
+      description: 'My Courses'
     },
     {
       path: '/student/results',
       nameKey: 'nav_results',
-      icon: <Award size={20} />,
+      icon: <Trophy size={20} />,
+      label: 'Results',
+      description: 'Academic Results'
     },
     {
       path: '/student/attendance',
       nameKey: 'nav_attendance',
-      icon: <Calendar size={20} />,
-    },
-    {
-      path: '/student/certificates',
-      nameKey: 'nav_certificates',
-      icon: <FileText size={20} />,
-    },
-    {
-      path: '/student/timetable',
-      nameKey: 'nav_timetable',
-      icon: <Calendar size={20} />,
-    },
-    {
-      path: '/student/assessment',
-      nameKey: 'nav_assessment',
-      icon: <FileText size={20} />,
+      icon: <Clock size={20} />,
+      label: 'Attendance',
+      description: 'Attendance Records'
     },
   ];
 
@@ -96,8 +85,8 @@ const StudentLayout = ({ children }) => {
           fixed top-0 left-0 h-full z-40 hidden lg:block
           transition-all duration-300
           ${sidebarCollapsed ? "w-20" : "w-64"}
-          bg-gradient-to-b from-blue-700 via-indigo-700 to-cyan-700
-          shadow-[0_0_40px_rgba(0,0,0,0.25)]
+          bg-gradient-to-b from-slate-900 via-slate-800 to-slate-900
+          shadow-[0_0_40px_rgba(0,0,0,0.5)]
         `}
       >
         <div className="flex flex-col h-full backdrop-blur-xl bg-white/5">
@@ -124,10 +113,13 @@ const StudentLayout = ({ children }) => {
           {!sidebarCollapsed && (
             <div className="p-4 border-b border-white/10">
               <div className="flex items-center space-x-3">
-                <div className="w-12 h-12 rounded-full bg-white/20 flex items-center justify-center flex-shrink-0">
-                  <span className="font-semibold text-white">
-                    {user?.name?.charAt(0)?.toUpperCase() || 'S'}
-                  </span>
+                <div className="relative">
+                  <div className="w-12 h-12 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center flex-shrink-0 shadow-lg">
+                    <span className="font-semibold text-white text-lg">
+                      {user?.name?.charAt(0)?.toUpperCase() || 'S'}
+                    </span>
+                  </div>
+                  <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-green-400 rounded-full border-2 border-slate-900"></div>
                 </div>
                 <div className="flex-1 min-w-0">
                   <p className="font-medium text-sm truncate text-white">
@@ -136,6 +128,12 @@ const StudentLayout = ({ children }) => {
                   <p className="text-white/70 text-xs truncate">
                     {user?.email || 'student@example.com'}
                   </p>
+                  <div className="flex items-center mt-1 space-x-2">
+                    <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-green-500/20 text-green-400">
+                      Active
+                    </span>
+                    <span className="text-white/50 text-xs">Student</span>
+                  </div>
                 </div>
               </div>
             </div>
@@ -143,7 +141,7 @@ const StudentLayout = ({ children }) => {
 
           {/* ================= NAVIGATION ================= */}
           <nav className="flex-1 min-h-0 p-4 overflow-y-auto hide-scrollbar">
-            <div className="space-y-1">
+            <div className="space-y-2">
               {navItems.map(item => {
                 const isActive = location.pathname === item.path;
                 return (
@@ -152,37 +150,79 @@ const StudentLayout = ({ children }) => {
                     to={item.path}
                     onClick={(e) => handleNavClick(e, item)}
                     className={`
-                      flex items-center rounded-xl px-3 py-3 transition-all
+                      group relative flex items-center rounded-xl px-3 py-3 transition-all duration-200
                       ${isActive
-                        ? 'bg-white/20 text-white'
-                        : 'text-white/80 hover:bg-white/10 hover:text-white'
+                        ? 'bg-gradient-to-r from-blue-600/30 to-purple-600/30 text-white shadow-lg border border-white/20'
+                        : 'text-white/70 hover:text-white hover:bg-white/10 hover:shadow-md'
                       }
                       ${sidebarCollapsed ? 'justify-center' : ''}
                     `}
                   >
-                    {item.icon}
-                    {!sidebarCollapsed && <span className="font-medium">{t(item.nameKey)}</span>}
+                    <div className={`flex items-center ${sidebarCollapsed ? '' : 'justify-between w-full'}`}>
+                      <div className="flex items-center space-x-3">
+                        <div className={`
+                          ${isActive ? 'text-white' : 'text-white/60 group-hover:text-white'}
+                          transition-colors duration-200
+                        `}>
+                          {item.icon}
+                        </div>
+                        {!sidebarCollapsed && (
+                          <div>
+                            <span className={`font-medium ${isActive ? 'text-white' : 'text-white/80 group-hover:text-white'}`}>
+                              {item.label}
+                            </span>
+                            {!sidebarCollapsed && (
+                              <p className="text-xs text-white/50 group-hover:text-white/70 mt-0.5">
+                                {item.description}
+                              </p>
+                            )}
+                          </div>
+                        )}
+                      </div>
+                      {!sidebarCollapsed && isActive && (
+                        <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
+                      )}
+                    </div>
+                    
+                    {/* Tooltip for collapsed state */}
+                    {sidebarCollapsed && (
+                      <div className="absolute left-full ml-2 px-2 py-1 bg-slate-800 text-white text-sm rounded opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap z-50">
+                        {item.label}
+                        <div className="absolute left-0 top-1/2 transform -translate-y-1/2 -translate-x-1 w-2 h-2 bg-slate-800 rotate-45"></div>
+                      </div>
+                    )}
                   </Link>
                 );
               })}
             </div>
           </nav>
 
-          <div className="p-4 border-t border-white/10">
+          <div className="p-4 border-t border-white/10 space-y-3">
             <button
               onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
-              className="w-full flex items-center justify-between p-3 rounded-lg bg-white/5 hover:bg-white/10 text-gray-300"
+              className="w-full flex items-center justify-between p-3 rounded-xl bg-gradient-to-r from-white/10 to-white/5 hover:from-white/20 hover:to-white/10 text-white/80 hover:text-white transition-all duration-200 group"
             >
-              {sidebarCollapsed ? <ChevronRight /> : <>{t('nav_collapse') ?? 'Collapse'} <ChevronLeft /></>}
+              <div className="flex items-center space-x-3">
+                <ChevronLeft className={`transition-transform duration-200 ${sidebarCollapsed ? 'rotate-180' : ''}`} />
+                {!sidebarCollapsed && (
+                  <span className="font-medium">{t('nav_collapse') ?? 'Collapse'}</span>
+                )}
+              </div>
+              {sidebarCollapsed && <ChevronRight />}
             </button>
 
-            <button
-              onClick={handleLogout}
-              className={`mt-3 w-full flex items-center p-3 rounded-lg bg-red-500/10 text-red-400 hover:bg-red-500/20 ${sidebarCollapsed ? 'justify-center' : ''}`}
-            >
-              <LogOut size={18} />
-              {!sidebarCollapsed && <span className="ml-3">{t('nav_logout') ?? 'Logout'}</span>}
-            </button>
+            <div className="relative">
+              <div className="absolute inset-0 bg-gradient-to-r from-red-500/20 to-pink-500/20 rounded-xl blur-xl"></div>
+              <button
+                onClick={handleLogout}
+                className={`relative w-full flex items-center p-3 rounded-xl bg-gradient-to-r from-red-500/10 to-pink-500/10 hover:from-red-500/20 hover:to-pink-500/20 text-red-400 hover:text-red-300 transition-all duration-200 group ${sidebarCollapsed ? 'justify-center' : ''}`}
+              >
+                <LogOut size={18} className="group-hover:scale-110 transition-transform duration-200" />
+                {!sidebarCollapsed && (
+                  <span className="ml-3 font-medium">{t('nav_logout') ?? 'Logout'}</span>
+                )}
+              </button>
+            </div>
           </div>
         </div>
       </aside>
@@ -273,37 +313,55 @@ const StudentLayout = ({ children }) => {
               </div>
 
               <div className="flex items-center space-x-3">
-                {/* Language selector removed for Student portal */}
-                
-                {/* Announcement Bell */}
-                <AnnouncementBell />
-                
-                <button
-                  onClick={handleLogout}
-                  className="flex items-center space-x-2 px-3 py-2 bg-gray-100 rounded-lg hover:bg-gray-200 text-text"
-                >
-                  <LogOut size={18} />
-                  <span className="hidden sm:inline font-medium text-sm">
-                    Logout
-                  </span>
-                </button>
+                {/* Removed duplicate announcement and logout buttons - only in sidebar now */}
               </div>
             </div>
           </div>
         </header>
 
         {/* ================= CONTENT AREA ================= */}
-        <div className="flex-1 overflow-y-auto scrollable-content p-3 sm:p-4 md:p-6">{children}</div>
+        <div className="flex-1 overflow-y-auto overflow-x-hidden scrollable-content p-3 sm:p-4 md:p-6 h-full max-h-screen">
+          <div className="min-h-full">
+            {children}
+          </div>
+        </div>
 
       </main>
-      
-      {/* Footer */}
-      <LoginFooter />
 
       {/* ================= QUOTA MODAL (OVERLAY) ================= */}
       <QuotaLimitModal isOpen={showQuotaModal} onClose={() => setShowQuotaModal(false)} quotaDetails={quotaDetails} />
     </div>
   );
 };
+
+/* Custom scrollbar styles */
+const style = document.createElement('style');
+style.textContent = `
+  .scrollable-content::-webkit-scrollbar {
+    width: 8px;
+  }
+  .scrollable-content::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 4px;
+  }
+  .scrollable-content::-webkit-scrollbar-thumb {
+    background: #c1c1c1;
+    border-radius: 4px;
+  }
+  .scrollable-content::-webkit-scrollbar-thumb:hover {
+    background: #a8a8a8;
+  }
+  .hide-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+  .hide-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+`;
+if (!document.head.querySelector('style[data-scrollbar-styles]')) {
+  style.setAttribute('data-scrollbar-styles', 'true');
+  document.head.appendChild(style);
+}
 
 export default StudentLayout;
