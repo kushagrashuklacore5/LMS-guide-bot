@@ -13,7 +13,7 @@ const EditEventModal = ({ event, role, onClose, onRefresh }) => {
     localStorage.getItem("authToken") ||
     localStorage.getItem("unstop_token");
 
-const apiUrl = import.meta.env.VITE_BACKEND_URL || "http://localhost:5002";
+const apiUrl = import.meta.env.VITE_BACKEND_URL || "https://core5.io";
 
   const canModify =
     role === event.extendedProps.createdByRole;

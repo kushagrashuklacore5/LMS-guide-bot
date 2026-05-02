@@ -2,7 +2,7 @@
 import React from 'react';
 import { io } from 'socket.io-client';
 
-const API_BASE_URL = import.meta.env.VITE_BACKEND_URL || 'http://13.232.217.235:5002/api';
+const API_BASE_URL = import.meta.env.VITE_BACKEND_URL || 'https://core5.io/api';
 
 export interface Transaction {
   id: string;
@@ -248,7 +248,7 @@ export const useRealTimeTransactions = () => {
     if (w.__transactionSocketInitialized) return;
     w.__transactionSocketInitialized = true;
 
-const socket = io((import.meta.env.VITE_BACKEND_URL || 'http://13.232.217.235:5002').replace('/api', ''), {
+const socket = io((import.meta.env.VITE_BACKEND_URL || 'https://core5.io').replace('/api', ''), {
       transports: ['websocket'],
       autoConnect: true
     });

@@ -7,7 +7,7 @@ const SuperAdminSubscription = () => {
   const [selectedPlan, setSelectedPlan] = useState('')
   const [currentSubscription, setCurrentSubscription] = useState(null)
   const [planName, setPlanName] = useState('Free')
-  const API_BASE = import.meta.env.VITE_BACKEND_URL || 'http://localhost:5002'
+  const API_BASE = import.meta.env.VITE_BACKEND_URL || 'https://core5.io'
 
   // Fetch current subscription on mount
   useEffect(() => {

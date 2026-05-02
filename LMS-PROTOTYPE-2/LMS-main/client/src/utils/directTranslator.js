@@ -158,7 +158,7 @@ class DirectTranslator {
     try {
       console.log(`🔄 Backend translating: "${trimmed.substring(0, 30)}..." from ${from} to ${to}`);
       
-const response = await fetch(`${import.meta.env.VITE_BACKEND_URL || 'http://localhost:5002'}/api/translation`, {
+const response = await fetch(`${import.meta.env.VITE_BACKEND_URL || 'https://core5.io'}/api/translation`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

@@ -12,7 +12,7 @@ const Subscription = () => {
   const [showCancelModal, setShowCancelModal] = useState(false);
   const [cancelling, setCancelling] = useState(false);
   
-  const API_BASE = import.meta.env.VITE_BACKEND_URL || 'http://localhost:5002';
+  const API_BASE = import.meta.env.VITE_BACKEND_URL || 'https://core5.io';
 
   // Fetch subscription data on mount
   useEffect(() => {

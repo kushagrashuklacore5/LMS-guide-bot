@@ -25,7 +25,7 @@ const AccountantTransactionHistory = () => {
 
   const downloadInvoice = async (transaction) => {
     try {
-const response = await axios.post(`${import.meta.env.VITE_BACKEND_URL || 'http://localhost:5002'}/api/transactions/generate-invoice`, {
+const response = await axios.post(`${import.meta.env.VITE_BACKEND_URL || 'https://core5.io'}/api/transactions/generate-invoice`, {
         transaction: transaction,
         student: { name: transaction.studentName, id: transaction.studentId },
         paymentOption: transaction.paymentOption || 'installment',

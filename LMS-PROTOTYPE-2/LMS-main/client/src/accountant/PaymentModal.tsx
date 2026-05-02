@@ -127,7 +127,7 @@ export default function PaymentModal({
     
     try {
       // Step 1: Create order from backend
-      const orderResponse = await axios.post(`${import.meta.env.VITE_BACKEND_URL || 'http://localhost:5002'}/api/payments/create-order`, {
+      const orderResponse = await axios.post(`${import.meta.env.VITE_BACKEND_URL || 'https://core5.io'}/api/payments/create-order`, {
         amount: numAmount,
         currency: 'INR',
         receipt: `fee_payment_${student.id}_${Date.now()}`,
@@ -172,7 +172,7 @@ export default function PaymentModal({
           handler: async function (response: any) {
             try {
               // Step 3: Verify payment with backend
-              const verifyResponse = await axios.post(`${import.meta.env.VITE_BACKEND_URL || 'http://localhost:5002'}/api/payments/verify-payment`, {
+              const verifyResponse = await axios.post(`${import.meta.env.VITE_BACKEND_URL || 'https://core5.io'}/api/payments/verify-payment`, {
                 razorpay_order_id: response.razorpay_order_id,
                 razorpay_payment_id: response.razorpay_payment_id,
                 razorpay_signature: response.razorpay_signature,

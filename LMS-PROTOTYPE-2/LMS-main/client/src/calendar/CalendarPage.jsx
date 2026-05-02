@@ -33,7 +33,7 @@ const CalendarPage = ({ role }) => {
         return;
       }
 
-      const apiUrl = import.meta.env.VITE_BACKEND_URL || "http://localhost:5002";
+      const apiUrl = import.meta.env.VITE_BACKEND_URL || "https://core5.io";
       // Ensure we don't double the /api prefix
       const baseUrl = apiUrl.endsWith('/api') ? apiUrl.slice(0, -4) : apiUrl;
       

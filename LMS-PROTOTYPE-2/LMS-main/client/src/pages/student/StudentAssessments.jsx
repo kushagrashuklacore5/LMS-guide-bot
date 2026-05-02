@@ -8,7 +8,7 @@ export default function StudentAssessments({ courseId }) {
 
   useEffect(() => {
     axios
-      .get(`${import.meta.env.VITE_BACKEND_URL || 'http://localhost:5002'}/api/assessments/course/${courseId}`, {
+      .get(`${import.meta.env.VITE_BACKEND_URL || 'https://core5.io'}/api/assessments/course/${courseId}`, {
         withCredentials: true
       })
       .then(res => setAssessments(res.data))

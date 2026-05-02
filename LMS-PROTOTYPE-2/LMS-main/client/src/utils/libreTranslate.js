@@ -14,7 +14,7 @@ export async function translateText(text, sourceLanguage = 'en', targetLanguage)
   try {
     console.log(`🔄 Translating: "${text.substring(0, 30)}..." from ${sourceLanguage} to ${targetLanguage}`);
 
-const response = await fetch(`${import.meta.env.VITE_BACKEND_URL || 'http://localhost:5002'}/api/translation`, {
+const response = await fetch(`${import.meta.env.VITE_BACKEND_URL || 'https://core5.io'}/api/translation`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
