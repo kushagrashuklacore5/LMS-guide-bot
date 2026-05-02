@@ -1,7 +1,7 @@
 // Database persistence service for all LMS entities
 import axios from 'axios';
 
-const API_BASE_URL = import.meta.env.VITE_BACKEND_URL || 'http://localhost:5002/api';
+const API_BASE_URL = import.meta.env.VITE_BACKEND_URL || 'http://13.232.217.235:5002/api';
 
 class DatabasePersistenceService {
   // Transactions

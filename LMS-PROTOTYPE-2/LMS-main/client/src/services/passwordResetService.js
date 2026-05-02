@@ -1,5 +1,5 @@
 // Password Reset Service
-const API_BASE = 'http://localhost:5002/api/password-reset';
+const API_BASE = 'http://13.232.217.235:5002/api/password-reset';
 
 class PasswordResetService {
   // Send OTP to email
