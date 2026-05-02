@@ -78,16 +78,6 @@ export const AuthProvider = ({ children }) => {
         s.disconnect();
       };
 
-      // Register service worker for better caching
-      if ('serviceWorker' in navigator) {
-        navigator.serviceWorker.register('/sw.js')
-          .then(registration => {
-            console.log('Service Worker registered:', registration.scope);
-          })
-          .catch(error => {
-            console.error('Service Worker registration failed:', error);
-          });
-      }
     } catch (error) {
       console.error('Socket initialization error:', error);
     }
