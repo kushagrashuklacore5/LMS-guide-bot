@@ -25,7 +25,7 @@ const Login = () => {
   const navigate = useNavigate();
   
   // Ensure API URL is always set
-  const API = 'http://13.232.217.235:5002/api';
+  const API = import.meta.env.VITE_BACKEND_URL || 'https://core5.io/api';
 
   // Security: Redirect if already logged in
   useEffect(() => {
