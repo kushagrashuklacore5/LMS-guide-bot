@@ -196,7 +196,7 @@ ehthumbs.db
 Thumbs.db
 
 # React build files
-client/build/
+# client/build/ - commented out to allow built frontend
 
 # Database files
 *.db
