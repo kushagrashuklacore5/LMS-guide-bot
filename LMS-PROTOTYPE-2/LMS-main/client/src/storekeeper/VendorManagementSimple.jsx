@@ -78,9 +78,14 @@ const VendorManagementSimple = () => {
 
   const stats = {
     totalVendors: vendors.length,
-    totalOrders: vendors.reduce((sum, vendor) => sum + vendor.totalOrders, 0),
-    totalValue: vendors.reduce((sum, vendor) => sum + vendor.totalValue, 0),
+    totalOrders: vendors.reduce((sum, vendor) => sum + (vendor.totalOrders || 0), 0),
+    totalValue: vendors.reduce((sum, vendor) => sum + (vendor.totalValue || 0), 0),
     totalStockItems: vendorStock.reduce((sum, stock) => sum + stock.quantity, 0)
+  };
+
+  const handleViewVendor = (vendor) => {
+    // Navigate to vendor portal with vendor details
+    window.open(`/vendor/dashboard?vendor=${vendor.id}`, '_blank');
   };
 
   return (
@@ -238,6 +243,13 @@ const VendorManagementSimple = () => {
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                           <div className="flex gap-2">
+                            <button 
+                              onClick={() => handleViewVendor(vendor)}
+                              className="text-green-600 hover:text-green-800 mr-2"
+                              title="View Vendor Portal"
+                            >
+                              <Package size={16} />
+                            </button>
                             <button className="text-blue-600 hover:text-blue-800">
                               <Edit2 size={16} />
                             </button>

@@ -3,6 +3,7 @@ import { Routes, Route, Navigate } from "react-router-dom";
 import Sidebar from "./Sidebar";
 import FeesCollection from "./FeesCollection";
 import AccountantTransactionHistory from "../components/AccountantTransactionHistory";
+import VendorInvoiceManagement from "../pages/accountant/VendorInvoiceManagement";
 import Inventory from "./Inventory";
 import Expenses from "./Expenses";
 import AccountantExport from "../components/AccountantExportFixed";
@@ -19,6 +20,7 @@ export default function AccountantDashboard() {
           <Route path="fees-collection/primary" element={<FeesCollection category={"Primary"} />} />
           <Route path="fees-collection/secondary" element={<FeesCollection category={"Secondary"} />} />
           <Route path="payment-history" element={<AccountantTransactionHistory />} />
+          <Route path="vendor-invoices" element={<VendorInvoiceManagement />} />
           <Route path="inventory" element={<Inventory />} />
           <Route path="expenses" element={<Expenses />} />
           <Route path="database-export" element={<AccountantExport />} />
