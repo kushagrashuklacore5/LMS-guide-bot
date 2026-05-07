@@ -16,6 +16,8 @@ import SuperAdminSubscription from "./pages/superadmin/SuperAdminSubscription";
 
 import InternalAdminPortal from "./pages/internal/InternalAdminPortal";
 
+import VendorManagement from "./storekeeper/VendorManagement";
+
 import { ToastContainer } from "react-toastify";
 
 import DatabaseExport from "./pages/admin/DatabaseExport";
@@ -1072,6 +1074,13 @@ function App() {
             }
 
           />
+
+	<Route
+	    path="/storekeeper/vendors"
+		 element={
+		<VendorManagement />
+	}
+	 />
 
 
 
