@@ -139,7 +139,7 @@ const Courses = () => {
               </div>
 
               {/* Stats */}
-              <div className="bg-white rounded-lg border p-5 min-w-[280px]">
+              <div data-tour="courses-overview" className="bg-white rounded-lg border p-5 min-w-[280px]">
                 <div className="flex items-center justify-between mb-4">
                   <h3 className="font-medium text-text">{t('overview')}</h3>
                   <TrendingUp className="w-5 h-5 text-primary" />
@@ -167,7 +167,7 @@ const Courses = () => {
           </div>
 
           {/* Search and Filter */}
-          <div className="mb-6">
+          <div data-tour="courses-search" className="mb-6">
             <div className="flex flex-col sm:flex-row gap-4">
               <div className="relative flex-1">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-text/40 w-4 h-4" />
@@ -239,8 +239,8 @@ const Courses = () => {
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {filteredCourses.map(course => (
-                <div key={course._id} className="bg-white rounded-lg border overflow-hidden hover:border-primary/50">
+              {filteredCourses.map((course, index) => (
+                <div key={course._id} data-tour={index === 0 ? 'courses-page-first-card' : undefined} className="bg-white rounded-lg border overflow-hidden hover:border-primary/50">
                   <div className="p-5">
                     <div className="flex items-start justify-between mb-4">
                       <div className="w-10 h-10 bg-primary/10 rounded-lg flex items-center justify-center">
@@ -290,6 +290,7 @@ const Courses = () => {
                     <div className="flex items-center justify-between pt-4 border-t border-background">
                       <Link
                         to={`/student/course/${course._id}`}
+                        data-tour={index === 0 ? 'courses-first-continue' : undefined}
                         className="flex items-center gap-2 text-primary hover:text-primary/80 font-medium text-sm"
                       >
                         {course.progress === 100 ? (
@@ -314,7 +315,7 @@ const Courses = () => {
 
           {/* Stats Summary */}
           <div className="mt-8">
-            <div className="bg-white rounded-lg border p-5">
+            <div data-tour="course-learning-summary" className="bg-white rounded-lg border p-5">
               <h3 className="font-medium text-text mb-4">{t('learning_summary')}</h3>
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                 <div className="text-center p-4 bg-background rounded-lg">

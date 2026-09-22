@@ -133,6 +133,7 @@ const AddTeacher = () => {
               <button
                 onClick={handleSaveTeacher}
                 disabled={loading}
+                data-tour="btn-save-teacher"
                 className="mt-4 w-full bg-primary text-white py-2 rounded-lg"
               >
                 {loading ? t('saving') : t('save_teacher')}
@@ -146,7 +147,7 @@ const AddTeacher = () => {
               <h3 className="font-semibold mb-4">{t('personal_information')}</h3>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <Input label={t('full_name')} name="fullName" value={form.fullName} onChange={handleChange} />
+                <Input data-tour="input-teacher-name" label={t('full_name')} name="fullName" value={form.fullName} onChange={handleChange} />
                 <Input label={t('email_address')} name="email" value={form.email} onChange={handleChange} />
                 <Input label={t('phone')} name="phone" value={form.phone} onChange={handleChange} />
                 <Input label={t('blood_group')} name="bloodGroup" value={form.bloodGroup} onChange={handleChange} />

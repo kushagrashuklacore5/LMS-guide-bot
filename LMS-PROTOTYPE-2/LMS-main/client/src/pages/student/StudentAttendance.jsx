@@ -76,7 +76,7 @@ const StudentAttendance = () => {
         </div>
 
         {/* Summary Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+        <div data-tour="attendance-summary" className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
           <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
             <p className="text-sm text-gray-600 mb-1">{t('total_classes')}</p>
             <p className="text-2xl font-bold text-blue-600">{summary.total}</p>
@@ -97,7 +97,7 @@ const StudentAttendance = () => {
 
         {/* Attendance Table */}
         {attendanceRecords.length > 0 ? (
-          <div className="bg-white border border-gray-200 rounded-lg overflow-hidden">
+          <div data-tour="attendance-records-log" className="bg-white border border-gray-200 rounded-lg overflow-hidden">
             <table className="w-full">
               <thead>
                 <tr className="bg-gray-50 border-b border-gray-200">
@@ -132,7 +132,7 @@ const StudentAttendance = () => {
             </table>
           </div>
         ) : (
-          <div className="bg-white border border-gray-200 rounded-lg p-12 text-center">
+          <div data-tour="attendance-records-log" className="bg-white border border-gray-200 rounded-lg p-12 text-center">
             <TrendingUp className="mx-auto mb-4 text-gray-400" size={48} />
             <p className="text-gray-500">No attendance records yet</p>
           </div>

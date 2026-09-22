@@ -119,7 +119,7 @@ const MentorClassrooms = () => {
       <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 p-8">
         <div className="max-w-7xl mx-auto">
           {/* ENHANCED HEADER */}
-          <div className="mb-10">
+          <div data-tour="classrooms-header" data-tour-classrooms-state={loading ? 'loading' : 'ready'} className="mb-10">
             <div className="flex items-center gap-3 mb-3">
               <div className="bg-gradient-to-br from-blue-500 to-indigo-600 p-3 rounded-lg">
                 <GraduationCap className="w-8 h-8 text-white" />
@@ -150,9 +150,10 @@ const MentorClassrooms = () => {
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-7">
-              {classrooms.map((classroom) => (
+              {classrooms.map((classroom, classroomIndex) => (
                 <div
                   key={classroom._id || classroom.id}
+                  data-tour={classroomIndex === 0 ? 'my-classroom-first-card' : undefined}
                   onClick={() => navigate(`/mentor/classroom/${classroom._id || classroom.id}`)}
                   className="bg-white rounded-xl shadow-md hover:shadow-2xl transition-all duration-300 overflow-hidden cursor-pointer transform hover:scale-105 border-t-4 border-blue-500 group"
                 >

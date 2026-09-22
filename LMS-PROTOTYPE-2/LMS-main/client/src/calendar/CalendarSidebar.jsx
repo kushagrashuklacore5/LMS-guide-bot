@@ -10,6 +10,7 @@ const CalendarSidebar = ({ role, onEventCreated }) => {
       {(role === "admin" || role === "mentor") && (
         <>
           <button
+            data-tour="calendar-create-event"
             onClick={() => {
               setOpen(true);
               setMessage("");

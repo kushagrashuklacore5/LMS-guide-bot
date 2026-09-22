@@ -163,6 +163,8 @@ const AssignStudents = () => {
       }
 
       toast.success(`Assigned ${studentIds.length} student(s) successfully`);
+      // Observed by GuideBot (ActionGuard) only — after the assign request succeeded.
+      window.dispatchEvent(new CustomEvent('guidebot:action-success', { detail: { actionId: 'students-assigned' } }));
       
       // Refresh data
       await getAssignedStudents(selectedCourse._id);
@@ -200,7 +202,7 @@ const AssignStudents = () => {
       <div className="p-4 md:p-6">
         <div className="max-w-7xl mx-auto">
           {/* Header */}
-                <div className="mb-8">
+                <div data-tour="assign-students-page" className="mb-8">
             <div className="flex items-center justify-between mb-6">
               <div>
                 <h1 className="text-2xl md:text-3xl font-bold text-text">{t('assign_students')}</h1>
@@ -240,9 +242,10 @@ const AssignStudents = () => {
                   </div>
                 ) : (
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                    {courses.map((course) => (
+                    {courses.map((course, courseIndex) => (
                       <div
                         key={course._id}
+                        data-tour={courseIndex === 0 ? 'assign-course-block' : undefined}
                         onClick={() => selectCourse(course)}
                         className="bg-white border border-gray-200 rounded-lg p-5 hover:shadow-md cursor-pointer"
                       >
@@ -257,7 +260,7 @@ const AssignStudents = () => {
                         </div>
                         <div className="flex items-center justify-between text-sm">
                           <span className="text-gray-600">{course.students?.length || 0} {t('students').toLowerCase()}</span>
-                          <button className="flex items-center gap-1 text-primary">
+                          <button data-tour={courseIndex === 0 ? 'assign-course-select' : undefined} className="flex items-center gap-1 text-primary">
                             <span>{t('select')}</span>
                             <UserPlus size={16} />
                           </button>
@@ -270,10 +273,10 @@ const AssignStudents = () => {
             </div>
           ) : (
             /* Student Assignment View */
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <div data-tour="assign-view" className="grid grid-cols-1 lg:grid-cols-3 gap-6">
               {/* Students List */}
               <div className="lg:col-span-2">
-                <div className="bg-white rounded-xl border border-gray-200 p-5 mb-6">
+                <div data-tour="assign-students-panel" className="bg-white rounded-xl border border-gray-200 p-5 mb-6">
                   <div className="flex items-center justify-between mb-4">
                     <h2 className="text-xl font-bold text-text">{t('students')}</h2>
                     <div className="text-sm text-gray-600">
@@ -336,7 +339,7 @@ const AssignStudents = () => {
 
               {/* Assignment Panel */}
               <div>
-                <div className="bg-white rounded-xl border border-gray-200 p-5 mb-6">
+                <div data-tour="assign-panel" className="bg-white rounded-xl border border-gray-200 p-5 mb-6">
                   <h2 className="text-xl font-bold text-text mb-4">Assignment</h2>
                   
                   <div className="space-y-4">

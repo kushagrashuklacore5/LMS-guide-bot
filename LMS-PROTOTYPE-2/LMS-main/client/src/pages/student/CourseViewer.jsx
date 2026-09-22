@@ -470,7 +470,7 @@ const CourseViewer = () => {
       <div className="max-w-6xl mx-auto p-6 bg-gray-50 min-min-h-screen">
 
         {/* ================= COURSE HEADER ================= */}
-        <div className="mb-8 bg-white rounded-xl shadow-lg p-6 border border-gray-200">
+        <div data-tour="course-title" className="mb-8 bg-white rounded-xl shadow-lg p-6 border border-gray-200">
           <div className="flex justify-between items-start">
             <div className="flex-1">
               <h1 className="text-3xl font-bold text-gray-800 mb-2">{course.title}</h1>
@@ -504,6 +504,8 @@ const CourseViewer = () => {
                 <div key={`week-${week.id || weekIndex}`} className="bg-white rounded-xl shadow-lg border border-gray-200 overflow-hidden hover:shadow-xl transition-all duration-300">
                   {/* Week Header with Progress Circle */}
                   <div 
+                    data-tour={weekIndex === 0 ? 'course-weeks-progress' : undefined}
+                    data-tour-week-items={weekTotalItems}
                     className="p-6 cursor-pointer bg-gradient-to-r from-blue-50 to-indigo-50 hover:from-blue-100 hover:to-indigo-100 transition-colors"
                     onClick={() => toggleWeekExpansion(week.id)}
                   >
@@ -629,7 +631,7 @@ const CourseViewer = () => {
                               if (!material || !material._id) return null;
                               const isCompleted = Array.isArray(completedMaterials) && completedMaterials.includes(material._id);
                               return (
-                                <div key={`material-${material._id || index}`} className={`bg-white rounded-lg p-4 border ${isCompleted ? 'border-green-500 bg-green-50' : 'border-gray-200'}`}>
+                                <div key={`material-${material._id || index}`} data-tour={weekIndex === 0 && index === 0 ? 'course-material-item' : undefined} className={`bg-white rounded-lg p-4 border ${isCompleted ? 'border-green-500 bg-green-50' : 'border-gray-200'}`}>
                                   <div className="flex items-center justify-between">
                                     <div className="flex-1">
                                       <h5 className="font-medium text-gray-800">{material.title}</h5>
@@ -673,7 +675,7 @@ const CourseViewer = () => {
 
                       {/* Assessments Section */}
                       {weekAssessments.length > 0 && (
-                        <div className="mb-6">
+                        <div data-tour={weekIndex === 0 ? 'course-assessments' : undefined} className="mb-6">
                           <h4 className="text-lg font-semibold text-gray-800 mb-4 flex items-center gap-2">
                             📝 Assessments
                           </h4>
@@ -888,9 +890,10 @@ const CourseViewer = () => {
           </h2>
           {liveClasses.length > 0 ? (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {liveClasses.map((liveClass) => (
+              {liveClasses.map((liveClass, liveIndex) => (
                 <div 
                   key={liveClass.id || liveClass._id}
+                  data-tour={liveIndex === 0 ? 'course-live-video' : undefined}
                   className="bg-white rounded-xl shadow-lg p-5 border border-purple-200 hover:shadow-xl transition-all"
                 >
                   <div className="flex items-start justify-between mb-3">
@@ -945,7 +948,7 @@ const CourseViewer = () => {
               ))}
             </div>
           ) : (
-            <div className="bg-gradient-to-br from-purple-50 to-blue-50 rounded-xl p-8 border-2 border-dashed border-purple-200 text-center">
+            <div data-tour="course-live-video" className="bg-gradient-to-br from-purple-50 to-blue-50 rounded-xl p-8 border-2 border-dashed border-purple-200 text-center">
               <div className="w-16 h-16 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-4">
                 <Video className="text-purple-500" size={32} />
               </div>

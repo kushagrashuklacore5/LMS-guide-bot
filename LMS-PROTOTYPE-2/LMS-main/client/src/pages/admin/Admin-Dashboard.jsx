@@ -115,6 +115,7 @@ const AdminDashboard = () => {
 
               {/* ➕ CREATE ANNOUNCEMENT */}
               <button
+                data-tour="admin-announcement-btn"
                 onClick={() => setOpenAnnouncementModal(true)}
                 className="px-4 py-2 bg-primary text-white rounded-lg text-sm hover:bg-primary/90"
               >
@@ -132,7 +133,7 @@ const AdminDashboard = () => {
           </div>
 
           {/* ================= STATS ================= */}
-          <div className="dashboard-grid mb-6 sm:mb-8">
+          <div data-tour="admin-overview-stats" className="dashboard-grid mb-6 sm:mb-8">
             <StatCard title={t('total_students')} value={stats.students} icon={<Users />} link="/admin/users" />
             <StatCard title={t('total_mentors')} value={stats.mentors} icon={<UserCheck />} link="/admin/mentors" />
             <StatCard title={t('total_courses')} value={stats.courses} icon={<BookOpen />} />
@@ -148,7 +149,7 @@ const AdminDashboard = () => {
           </div>
 
           {/* ================= RECENT ACTIVITY ================= */}
-          <div className="responsive-card">
+          <div data-tour="admin-recent-activity" className="responsive-card">
             <div className="responsive-card-content">
               <div className="flex items-center justify-between mb-4 sm:mb-6">
                 <h2 className="responsive-text-lg font-bold">{t('recent_activity')}</h2>

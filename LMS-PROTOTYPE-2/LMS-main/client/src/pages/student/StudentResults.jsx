@@ -45,7 +45,7 @@ const StudentResults = () => {
 
   return (
     <StudentLayout>
-      <div className="max-w-5xl mx-auto p-6 space-y-6">
+      <div data-tour="results-page" className="max-w-5xl mx-auto p-6 space-y-6">
         <h1 className="text-3xl font-bold flex items-center gap-3">
           <FileText className="text-primary" /> {t('my_results')}
         </h1>
@@ -58,11 +58,11 @@ const StudentResults = () => {
           </div>
         ) : (
           <div className="space-y-6">
-            {results.map((result) => (
+            {results.map((result, resultIndex) => (
               <div key={result.id || result._id} className="bg-white rounded-2xl shadow-lg overflow-hidden border border-gray-100 hover:shadow-xl transition-shadow duration-300">
                 
                 {/* Header */}
-                <div className={`p-6 ${result.overallStatus === "PASS" ? "bg-gradient-to-r from-green-50 to-emerald-50" : "bg-gradient-to-r from-red-50 to-pink-50"}`}>
+                <div data-tour={resultIndex === 0 ? 'results-cards' : undefined} className={`p-6 ${result.overallStatus === "PASS" ? "bg-gradient-to-r from-green-50 to-emerald-50" : "bg-gradient-to-r from-red-50 to-pink-50"}`}>
                   <div className="flex justify-between items-start">
                     <div>
                       <h2 className="text-2xl font-bold text-gray-800">{result.term || "General"}</h2>
@@ -86,7 +86,7 @@ const StudentResults = () => {
                 </div>
 
                 {/* Table */}
-                <div className="p-6">
+                <div data-tour={resultIndex === 0 ? 'results-subject-breakdown' : undefined} className="p-6">
                   <h3 className="text-lg font-semibold text-gray-800 mb-4">Subject-wise Marks</h3>
                   <div className="overflow-x-auto">
                     <table className="w-full">

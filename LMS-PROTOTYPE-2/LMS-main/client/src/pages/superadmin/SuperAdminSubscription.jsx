@@ -485,7 +485,7 @@ const SuperAdminSubscription = () => {
           </div>
 
           {/* Pricing Cards */}
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '32px', marginBottom: '48px' }}>
+          <div data-tour="subscription-plans" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '32px', marginBottom: '48px' }}>
             {plans.map((plan) => (
               <div
                 key={plan.id}

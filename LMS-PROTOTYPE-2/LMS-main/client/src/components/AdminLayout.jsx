@@ -19,6 +19,7 @@ import { useSimpleTranslation } from "../context/SimpleTranslationContext";
 import { useTranslation } from "../context/TranslationContext";
 import AnnouncementBell from "./AnnouncementBell";
 import LoginFooter from './LoginFooter';
+import GuideBotLauncher from '../guidebot/runtime/GuideBotLauncher';
 import whiteLogo from '../../../core5 logo new new-modified (1).png';
 
 const AdminLayout = ({ children }) => {
@@ -48,18 +49,18 @@ const AdminLayout = ({ children }) => {
 
   /* ================= SIDEBAR ITEMS ================= */
   const navItems = [
-    { path: "/admin/dashboard", nameKey: 'nav_dashboard', icon: <LayoutDashboard size={20} /> },
-    { path: "/admin/users", nameKey: 'nav_users', icon: <Users size={20} /> },
-    { path: "/admin/database-export", nameKey: 'nav_database_export', icon: <Database size={20} /> },
-    { path: "/admin/fee-structure", nameKey: 'nav_fee_structure', icon: <BarChart3 size={20} /> },
-    { path: "/admin/calendar", nameKey: 'nav_calendar', icon: <Calendar size={20} /> },
+    { path: "/admin/dashboard", nameKey: 'nav_dashboard', icon: <LayoutDashboard size={20} />, tourId: 'nav-dashboard' },
+    { path: "/admin/users", nameKey: 'nav_users', icon: <Users size={20} />, tourId: 'nav-users' },
+    { path: "/admin/database-export", nameKey: 'nav_database_export', icon: <Database size={20} />, tourId: 'nav-database-export' },
+    { path: "/admin/fee-structure", nameKey: 'nav_fee_structure', icon: <BarChart3 size={20} />, tourId: 'nav-fee-structure' },
+    { path: "/admin/calendar", nameKey: 'nav_calendar', icon: <Calendar size={20} />, tourId: 'nav-calendar' },
 
     /* ===== BELOW CALENDAR ===== */
-    { path: "/admin/add-student", nameKey: 'nav_add_student', icon: <UserPlus size={20} /> },
-    { path: "/admin/add-teacher", nameKey: 'nav_add_teacher', icon: <UserPlus size={20} /> },
+    { path: "/admin/add-student", nameKey: 'nav_add_student', icon: <UserPlus size={20} />, tourId: 'nav-add-student' },
+    { path: "/admin/add-teacher", nameKey: 'nav_add_teacher', icon: <UserPlus size={20} />, tourId: 'nav-add-teacher' },
 
     /* ===== CLASSROOMS (JUST BELOW ADD TEACHER) ===== */
-    { path: "/admin/classrooms", nameKey: 'nav_classrooms', icon: <School size={20} /> },
+    { path: "/admin/classrooms", nameKey: 'nav_classrooms', icon: <School size={20} />, tourId: 'nav-classrooms' },
   ];
 
   const currentPage =
@@ -103,6 +104,7 @@ const AdminLayout = ({ children }) => {
                   key={item.path}
                   to={item.path}
                   onClick={(e) => handleNavClick(e, item)}
+                  data-tour={item.tourId}
                   className={`flex items-center rounded-lg px-3 py-3 transition-colors
                     ${isActive ? "bg-white/10 text-white border-l-4 border-blue-500" : "hover:bg-white/5 text-gray-300 hover:text-white"}
                     ${sidebarCollapsed ? "justify-center" : ""}
@@ -195,6 +197,11 @@ const AdminLayout = ({ children }) => {
         <div className="flex-1 overflow-y-auto scrollable-content p-3 sm:p-4 md:p-6">{children}</div>
       </main>
       
+      {/* GuideBot Launcher — one shared instance for both desktop and mobile */}
+      <div className="fixed bottom-6 right-6 z-40">
+        <GuideBotLauncher tourId="admin-overview-v1" />
+      </div>
+
       {/* Footer */}
       <LoginFooter />
     </div>

@@ -126,6 +126,7 @@ const AddStudent = () => {
               <button
                 onClick={handleSaveStudent}
                 disabled={loading}
+                data-tour="btn-save-student"
                 className="mt-4 w-full bg-primary text-white py-2 rounded-lg"
               >
                 {loading ? t('saving') : t('save_student')}
@@ -139,7 +140,7 @@ const AddStudent = () => {
               <h3 className="font-semibold mb-4">{t('personal_information')}</h3>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <Input label={t('full_name')} name="fullName" value={form.fullName} onChange={handleChange} />
+                <Input data-tour="input-student-name" label={t('full_name')} name="fullName" value={form.fullName} onChange={handleChange} />
                 <Input label={t('parent_name')} name="parentName" value={form.parentName} onChange={handleChange} />
                 <Input label={t('email_address')} name="email" value={form.email} onChange={handleChange} />
                 <Input label={t('phone')} name="phone" value={form.phone} onChange={handleChange} />

@@ -230,7 +230,7 @@ const UserList = () => {
             </div>
 
             {/* Stats */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+            <div data-tour="user-list-stats" className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
               <div className="bg-white rounded-xl border border-gray-200 p-5">
                 <div className="flex items-center justify-between">
                   <div>
@@ -269,7 +269,7 @@ const UserList = () => {
             </div>
 
             {/* Filters */}
-            <div className="bg-white rounded-xl border border-gray-200 p-5 mb-6">
+            <div data-tour="user-list-filters" className="bg-white rounded-xl border border-gray-200 p-5 mb-6">
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-text mb-2">{t('search')}</label>
@@ -364,8 +364,8 @@ const UserList = () => {
                   </tr>
                 </thead>
                 <tbody>
-                  {usersToShow.map((user) => (
-                    <tr key={user.id} className="border-b border-gray-100 hover:bg-gray-50">
+                  {usersToShow.map((user, index) => (
+                    <tr key={user.id} data-tour={index === 0 ? 'user-list-first-record' : undefined} className="border-b border-gray-100 hover:bg-gray-50">
                       <td className="p-4">
                         <div className="flex items-center space-x-3">
                           <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">

@@ -12,6 +12,7 @@ import {
 import { useAuth } from "../auth/auth";
 import QuotaLimitModal from './QuotaLimitModal';
 import { useTranslation } from "../context/TranslationContext";
+import GuideBotLauncher from '../guidebot/runtime/GuideBotLauncher';
 import whiteLogo from '../../../core5 logo new new-modified (1).png';
 
 const StudentLayout = ({ children }) => {
@@ -47,28 +48,32 @@ const StudentLayout = ({ children }) => {
       nameKey: 'nav_dashboard',
       icon: <Home size={20} />,
       label: 'Dashboard',
-      description: 'Overview & Stats'
+      description: 'Overview & Stats',
+      tourId: 'nav-dashboard'
     },
     {
       path: '/student/courses',
       nameKey: 'nav_courses',
       icon: <GraduationCap size={20} />,
       label: 'Courses',
-      description: 'My Courses'
+      description: 'My Courses',
+      tourId: 'nav-courses'
     },
     {
       path: '/student/results',
       nameKey: 'nav_results',
       icon: <Trophy size={20} />,
       label: 'Results',
-      description: 'Academic Results'
+      description: 'Academic Results',
+      tourId: 'nav-results'
     },
     {
       path: '/student/attendance',
       nameKey: 'nav_attendance',
       icon: <Clock size={20} />,
       label: 'Attendance',
-      description: 'Attendance Records'
+      description: 'Attendance Records',
+      tourId: 'nav-attendance'
     },
   ];
 
@@ -149,6 +154,7 @@ const StudentLayout = ({ children }) => {
                     key={item.path}
                     to={item.path}
                     onClick={(e) => handleNavClick(e, item)}
+                    data-tour={item.tourId}
                     className={`
                       group relative flex items-center rounded-xl px-3 py-3 transition-all duration-200
                       ${isActive
@@ -330,6 +336,11 @@ const StudentLayout = ({ children }) => {
 
       {/* ================= QUOTA MODAL (OVERLAY) ================= */}
       <QuotaLimitModal isOpen={showQuotaModal} onClose={() => setShowQuotaModal(false)} quotaDetails={quotaDetails} />
+
+      {/* GuideBot Launcher — one shared instance for both desktop and mobile */}
+      <div className="fixed bottom-6 right-6 z-40">
+        <GuideBotLauncher tourId="student-overview-v1" />
+      </div>
     </div>
   );
 };

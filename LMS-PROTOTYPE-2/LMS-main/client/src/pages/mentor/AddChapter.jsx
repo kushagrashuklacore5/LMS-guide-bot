@@ -161,6 +161,8 @@ const AddChapter = () => {
       }
 
       toast.success(editingChapter ? t('chapter_updated') : t('chapter_created'));
+      // Observed by GuideBot (ActionGuard) only — after the create request succeeded.
+      if (!editingChapter) window.dispatchEvent(new CustomEvent('guidebot:action-success', { detail: { actionId: 'chapter-created' } }));
 
       getChapters(selectedCourse._id);
       resetForm();
@@ -253,7 +255,7 @@ const AddChapter = () => {
       <div className="p-4 md:p-6">
         <div className="max-w-7xl mx-auto">
           {/* Header */}
-          <div className="mb-8">
+          <div data-tour="add-chapter-page" className="mb-8">
             <div className="flex items-center justify-between mb-6">
               <div>
                 <h1 className="text-2xl md:text-3xl font-bold text-text">{t('manage_chapters')}</h1>
@@ -298,9 +300,10 @@ const AddChapter = () => {
                   </div>
                 ) : (
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                    {courses.map((course) => (
+                    {courses.map((course, courseIndex) => (
                       <div
                         key={course._id}
+                        data-tour={courseIndex === 0 ? 'chapter-course-block' : undefined}
                         onClick={() => selectCourse(course)}
                         className="bg-white border border-gray-200 rounded-lg p-5 hover:shadow-md cursor-pointer"
                       >
@@ -315,7 +318,7 @@ const AddChapter = () => {
                         </div>
                         <div className="flex items-center justify-between text-sm">
                           <span className="text-gray-600">{course.students?.length || 0} {t('students')}</span>
-                          <button className="flex items-center gap-1 text-primary">
+                          <button data-tour={courseIndex === 0 ? 'chapter-course-select' : undefined} className="flex items-center gap-1 text-primary">
                             <span>{t('select')}</span>
                             <ChevronRight size={16} />
                           </button>
@@ -332,7 +335,7 @@ const AddChapter = () => {
               <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                 {/* Chapters List */}
                 <div className="lg:col-span-2">
-                  <div className="bg-white rounded-xl border border-gray-200 p-5 mb-6">
+                  <div data-tour="chapters-panel" className="bg-white rounded-xl border border-gray-200 p-5 mb-6">
                     <div className="flex items-center justify-between mb-6">
                       <h2 className="text-xl font-bold text-text">Chapters</h2>
                       <div className="text-sm text-gray-600">
@@ -417,7 +420,7 @@ const AddChapter = () => {
 
                 {/* Add/Edit Form */}
                 <div>
-                  <div className="bg-white rounded-xl border border-gray-200 p-5">
+                  <div data-tour="add-chapter-form" className="bg-white rounded-xl border border-gray-200 p-5">
                     <h2 className="text-xl font-bold text-text mb-4">
                       {editingChapter ? 'Edit Chapter' : 'Add Chapter'}
                     </h2>

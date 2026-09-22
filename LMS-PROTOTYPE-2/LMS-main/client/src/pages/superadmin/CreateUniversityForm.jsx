@@ -98,6 +98,7 @@ const CreateUniversityForm = ({ onSuccess }) => {
                     <Building2 className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
                     <input
                       name="name"
+                      data-tour="input-institute-name"
                       placeholder="e.g., Tech Institute"
                       className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all text-gray-900 placeholder-gray-500"
                       value={form.name}
@@ -198,6 +199,7 @@ const CreateUniversityForm = ({ onSuccess }) => {
               <button
                 type="submit"
                 disabled={loading}
+                data-tour="btn-submit-institute"
                 className="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 disabled:opacity-50 text-white font-semibold py-4 rounded-xl transition-all duration-300 flex items-center justify-center gap-2 shadow-lg"
               >
                 {loading ? (

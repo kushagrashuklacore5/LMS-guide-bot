@@ -217,6 +217,8 @@ const ClassResults = () => {
       }
 
       toast.success(editingResult ? t('result_updated_successfully') : t('result_added_successfully'));
+      // Observed by GuideBot (ActionGuard) only — fires strictly after the request succeeded.
+      if (editingResult) window.dispatchEvent(new CustomEvent('guidebot:action-success', { detail: { actionId: 'result-updated' } }));
       setShowAddResultModal(false);
       setEditingResult(null);
       setResultForm({ 
@@ -271,7 +273,7 @@ const ClassResults = () => {
         </div>
 
         {/* Controls */}
-        <div className="bg-white border border-gray-200 rounded-lg p-6 mb-6">
+        <div data-tour="results-controls" className="bg-white border border-gray-200 rounded-lg p-6 mb-6">
           <div className="flex justify-between items-end gap-4 flex-wrap">
             <div className="flex-1 min-w-xs">
               <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -292,6 +294,7 @@ const ClassResults = () => {
             </div>
 
             <button
+              data-tour="results-add-button"
               onClick={() => handleOpenAddModal()}
               disabled={!selectedClassroom}
               className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors disabled:bg-gray-400 flex items-center gap-2"
@@ -304,7 +307,7 @@ const ClassResults = () => {
 
         {/* Results Table */}
         {selectedClassroom && students.length > 0 ? (
-          <div className="bg-white border border-gray-200 rounded-lg overflow-hidden">
+          <div data-tour="results-table" className="bg-white border border-gray-200 rounded-lg overflow-hidden">
             <table className="w-full">
               <thead>
                 <tr className="bg-gray-50 border-b border-gray-200">
@@ -356,9 +359,10 @@ const ClassResults = () => {
                         )}
                       </td>
                       <td className="px-6 py-3 text-center">
-                        <div className="flex justify-center gap-2">
+                        <div data-tour={index === 0 ? 'results-first-action' : undefined} className="flex justify-center gap-2">
                           <button
                             onClick={() => handleOpenAddModal(student)}
+                            data-tour={index === 0 ? 'results-first-edit' : undefined}
                             className="text-blue-600 hover:text-blue-700 p-1"
                             title="Edit"
                           >
@@ -393,7 +397,7 @@ const ClassResults = () => {
       {/* Add/Edit Result Modal */}
       {showAddResultModal && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-lg max-w-md w-full">
+          <div data-tour="results-edit-form" className="bg-white rounded-lg max-w-md w-full">
             <div className="p-6 border-b border-gray-200 flex justify-between items-center">
               <h3 className="text-lg font-bold">
                 {editingResult ? "Edit Result" : "Add Result"}

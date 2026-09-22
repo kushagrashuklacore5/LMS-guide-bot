@@ -98,6 +98,8 @@ export default function Requirements({ role }: { role: string }) {
   const filteredRequirements = role === 'storekeeper' || role === 'admin' || role === 'accountant'
     ? requirements
     : requirements;
+    const firstApprovedId = (filteredRequirements || []).find((r: any) => r.status === 'approved')?.id;
+    const firstPendingId = (filteredRequirements || []).find((r: any) => r.status === 'pending')?.id;
 
   const handleItemToggle = (item: string) => {
     setForm(prev => ({
@@ -159,6 +161,8 @@ export default function Requirements({ role }: { role: string }) {
 
       const result = await response.json();
       console.log('Requirement submitted:', result);
+      // Observed by GuideBot (ActionGuard) only — fires strictly after the request succeeded.
+      window.dispatchEvent(new CustomEvent('guidebot:action-success', { detail: { actionId: 'requirement-created' } }));
 
       // Reset form
       setShowRequestForm(false);
@@ -345,6 +349,7 @@ export default function Requirements({ role }: { role: string }) {
         {role !== 'storekeeper' && (
           <button
             onClick={() => setShowRequestForm(true)}
+            data-tour="requirements-new-button"
             className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 flex items-center"
           >
             <Package className="w-5 h-5 mr-2" />
@@ -356,7 +361,7 @@ export default function Requirements({ role }: { role: string }) {
       {/* Request Form Modal */}
       {showRequestForm && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-6 w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+          <div data-tour="requirements-create-form" className="bg-white rounded-lg p-6 w-full max-w-2xl max-h-[90vh] overflow-y-auto">
             <h2 className="text-xl font-bold mb-4">Create Requirement Request</h2>
             
             <div className="space-y-4">
@@ -557,7 +562,7 @@ export default function Requirements({ role }: { role: string }) {
           </div>
         ) : (
           filteredRequirements?.map((req: any) => (
-            <div key={req.id} className="bg-white border border-gray-200 rounded-lg p-4">
+            <div key={req.id} data-tour={req.id === firstApprovedId ? 'requirement-approved-block' : req.id === firstPendingId ? 'requirement-pending-block' : undefined} className="bg-white border border-gray-200 rounded-lg p-4">
               <div className="flex justify-between items-start mb-3">
                 <div>
                   <h3 className="font-semibold text-lg">{req.classroomName}</h3>

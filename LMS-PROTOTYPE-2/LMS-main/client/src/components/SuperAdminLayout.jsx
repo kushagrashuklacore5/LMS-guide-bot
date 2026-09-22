@@ -14,6 +14,7 @@ import {
 import { useAuth } from "../auth/auth";
 import AnnouncementBell from "./AnnouncementBell";
 import LoginFooter from './LoginFooter';
+import GuideBotLauncher from '../guidebot/runtime/GuideBotLauncher';
 import whiteLogo from '../../../core5 logo new new-modified (1).png';
 
 const SuperAdminLayout = ({ children }) => {
@@ -189,12 +190,12 @@ const API_BASE = import.meta.env.VITE_BACKEND_URL || 'https://core5.io';
 
   /* ================= SIDEBAR ITEMS ================= */
   const navItems = [
-    { path: "/superadmin/dashboard", name: 'Overview', icon: <LayoutDashboard size={20} /> },
-    { path: "/superadmin/dashboard?tab=universities", name: 'Institutes', icon: <Building2 size={20} /> },
-    { path: "/superadmin/dashboard?tab=createUniversity", name: 'Add Institute', icon: <Plus size={20} /> },
-    { path: "/superadmin/dashboard?tab=createUser", name: 'Add Staff', icon: <UserPlus size={20} /> },
-    { path: "/superadmin/dashboard?tab=users", name: 'All Staff', icon: <Users size={20} /> },
-    { path: "/superadmin/subscription", name: 'Subscription', icon: <Star size={20} /> },
+    { path: "/superadmin/dashboard", name: 'Overview', icon: <LayoutDashboard size={20} />, tourId: 'nav-overview' },
+    { path: "/superadmin/dashboard?tab=universities", name: 'Institutes', icon: <Building2 size={20} />, tourId: 'nav-institutes' },
+    { path: "/superadmin/dashboard?tab=createUniversity", name: 'Add Institute', icon: <Plus size={20} />, tourId: 'nav-add-institute' },
+    { path: "/superadmin/dashboard?tab=createUser", name: 'Add Staff', icon: <UserPlus size={20} />, tourId: 'nav-add-staff' },
+    { path: "/superadmin/dashboard?tab=users", name: 'All Staff', icon: <Users size={20} />, tourId: 'nav-all-staff' },
+    { path: "/superadmin/subscription", name: 'Subscription', icon: <Star size={20} />, tourId: 'nav-subscription' },
   ];
 
   const currentPage =
@@ -262,6 +263,7 @@ const API_BASE = import.meta.env.VITE_BACKEND_URL || 'https://core5.io';
                 <Link
                   key={item.path}
                   to={item.path}
+                  data-tour={item.tourId}
                   className={`flex items-center rounded-lg px-3 py-3 transition-colors
                     ${isActive ? "bg-white/10 text-white border-l-4 border-blue-500" : "hover:bg-white/5 text-gray-300 hover:text-white"}
                     ${sidebarCollapsed ? "justify-center" : ""}
@@ -368,9 +370,11 @@ const API_BASE = import.meta.env.VITE_BACKEND_URL || 'https://core5.io';
             
             <div className="flex items-center gap-4">
               {/* Subscription Timer */}
-              <div className={`flex items-center gap-2 px-4 py-2 border rounded-lg transition-colors duration-300 ${
-                timer === 0 
-                  ? 'bg-red-100 border-red-300' 
+              <div
+                data-tour="header-subscription-timer"
+                className={`flex items-center gap-2 px-4 py-2 border rounded-lg transition-colors duration-300 ${
+                timer === 0
+                  ? 'bg-red-100 border-red-300'
                   : 'bg-blue-100 border-blue-300'
               }`}>
                 <Star className={timer === 0 ? 'text-red-600' : 'text-blue-600'} size={16} />
@@ -478,6 +482,11 @@ const API_BASE = import.meta.env.VITE_BACKEND_URL || 'https://core5.io';
         </main>
       </div>
       
+      {/* GuideBot Launcher — one shared instance for both desktop and mobile */}
+      <div className="fixed bottom-6 right-6 z-40">
+        <GuideBotLauncher tourId="superadmin-overview-v1" />
+      </div>
+
       {/* Footer */}
       <LoginFooter />
 

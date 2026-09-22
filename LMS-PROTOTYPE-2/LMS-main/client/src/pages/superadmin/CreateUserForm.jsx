@@ -154,7 +154,7 @@ const CreateUserForm = ({ onSuccess }) => {
         <div className="p-8">
           <form onSubmit={handleCreate} className="space-y-6">
             {/* User Information */}
-            <div className="mb-8">
+            <div data-tour="staff-user-info" className="mb-8">
               <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
                 <User className="text-purple-600" size={20} />
                 User Information
@@ -199,7 +199,7 @@ const CreateUserForm = ({ onSuccess }) => {
             </div>
 
             {/* Role & Assignment */}
-            <div>
+            <div data-tour="staff-role-assignment">
               <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
                 <Shield className="text-blue-600" size={20} />
                 Role & Assignment
@@ -214,6 +214,7 @@ const CreateUserForm = ({ onSuccess }) => {
                     <Shield className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
                     <select
                       name="role"
+                      data-tour="select-staff-role"
                       className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all text-gray-900 appearance-none bg-white"
                       value={form.role}
                       onChange={handleChange}
@@ -236,6 +237,7 @@ const CreateUserForm = ({ onSuccess }) => {
                     <Building2 className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
                     <select
                       name="universityId"
+                      data-tour="select-staff-university"
                       className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all text-gray-900 appearance-none bg-white"
                       value={form.universityId}
                       onChange={handleChange}
@@ -256,6 +258,7 @@ const CreateUserForm = ({ onSuccess }) => {
               <button
                 type="submit"
                 disabled={loading}
+                data-tour="btn-submit-staff"
                 className="w-full bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 disabled:opacity-50 text-white font-semibold py-4 rounded-xl transition-all duration-300 flex items-center justify-center gap-2 shadow-lg"
               >
                 {loading ? (

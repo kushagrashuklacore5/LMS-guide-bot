@@ -143,11 +143,7 @@ const SuperAdminDashboard = () => {
 
     const tabParam = searchParams.get('tab');
 
-    if (tabParam) {
-
-      setActiveTab(tabParam);
-
-    }
+    setActiveTab(tabParam || 'overview');
 
     
 
@@ -471,7 +467,11 @@ const SuperAdminDashboard = () => {
 
     <SuperAdminLayout>
 
-      <div className="max-w-7xl mx-auto">
+      {/* Always-rendered regardless of active tab — lets GuideBot know
+          up front whether at least one institute exists, since the
+          Institutes tab's own card markup only renders once that tab is
+          actually active. */}
+      <div data-tour-universities-count={universities.length} className="max-w-7xl mx-auto">
 
         {/* Header Section */}
 
@@ -505,7 +505,7 @@ const SuperAdminDashboard = () => {
 
         {generatedCredentials && (
 
-          <div className="bg-gradient-to-r from-green-50 to-emerald-50 border border-green-200 rounded-xl p-6 mb-6 shadow-lg">
+          <div data-tour="credentials-banner" className="bg-gradient-to-r from-green-50 to-emerald-50 border border-green-200 rounded-xl p-6 mb-6 shadow-lg">
 
             <div className="flex justify-between items-start flex-wrap">
 
@@ -537,6 +537,8 @@ const SuperAdminDashboard = () => {
 
                 onClick={downloadCredentialsPDF}
 
+                data-tour="btn-download-credentials-pdf"
+
                 className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg font-semibold whitespace-nowrap transition-colors shadow-md"
 
               >
@@ -565,7 +567,7 @@ const SuperAdminDashboard = () => {
 
             {/* Stats Grid */}
 
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 gap-4 mb-8">
+            <div data-tour="overview-stats" className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 gap-4 mb-8">
 
               <div className="bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl p-4 text-white">
 
@@ -627,7 +629,7 @@ const SuperAdminDashboard = () => {
 
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
 
-              <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+              <div data-tour="recent-activity" className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
 
                 <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
 
@@ -663,7 +665,7 @@ const SuperAdminDashboard = () => {
 
 
 
-              <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+              <div data-tour="quick-actions" className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
 
                 <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
 
@@ -763,6 +765,8 @@ const SuperAdminDashboard = () => {
 
                     placeholder="Search universities..."
 
+                    data-tour="search-universities"
+
                     value={searchTerm}
 
                     onChange={(e) => setSearchTerm(e.target.value)}
@@ -815,11 +819,13 @@ const SuperAdminDashboard = () => {
 
                 {filteredUniversities.map((uni) => (
 
-                  <div 
+                  <div
 
-                    key={uni.id} 
+                    key={uni.id}
 
                     onClick={() => setSelectedUni(uni)}
+
+                    data-tour="university-card"
 
                     className="group relative bg-gradient-to-br from-gray-50 to-white border border-gray-200 rounded-2xl p-6 hover:border-blue-300 hover:shadow-xl transition-all duration-300 cursor-pointer transform hover:scale-105 overflow-hidden"
 
@@ -975,6 +981,8 @@ const SuperAdminDashboard = () => {
                     type="text"
 
                     placeholder="Search staff..."
+
+                    data-tour="search-staff"
 
                     className="pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
 

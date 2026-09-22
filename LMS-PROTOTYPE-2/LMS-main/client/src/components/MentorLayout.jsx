@@ -19,6 +19,7 @@ import QuotaLimitModal from './QuotaLimitModal';
 import { useTranslation } from "../context/TranslationContext";
 import AnnouncementBell from "./AnnouncementBell";
 import LoginFooter from './LoginFooter';
+import GuideBotLauncher from '../guidebot/runtime/GuideBotLauncher';
 import whiteLogo from '../../../core5 logo new new-modified (1).png';
 
 const MentorLayout = ({ children }) => {
@@ -42,6 +43,11 @@ const MentorLayout = ({ children }) => {
     navigate(item.path);
   };
 
+  // The sidebar <Link onClick> below calls this; it was referenced but never
+  // defined, so every sidebar click threw and fell back to a full page reload.
+  // Navigation itself is done by the <Link>.
+  const handleNavClick = () => {};
+
   // Language selector removed for Mentor portal
 
   const navItems = [
@@ -49,6 +55,7 @@ const MentorLayout = ({ children }) => {
       path: "/mentor/dashboard",
       nameKey: "nav_dashboard",
       icon: <LayoutDashboard size={20} />,
+      tourId: "nav-dashboard",
     },
     ...(user?.role === "mentor" || user?.role === "teacher"
       ? [
@@ -56,21 +63,25 @@ const MentorLayout = ({ children }) => {
           path: "/mentor/classrooms",
           nameKey: "my_classrooms",
           icon: <School size={20} />,
+          tourId: "nav-my-classroom",
         },
         {
           path: "/mentor/attendance",
           nameKey: "nav_attendance",
           icon: <Users size={20} />,
+          tourId: "nav-attendance",
         },
         {
           path: "/mentor/results",
           nameKey: "class_results",
           icon: <FileText size={20} />,
+          tourId: "nav-results",
         },
         {
           path: "/mentor/requirements",
           nameKey: "requirements",
           icon: <Package size={20} />,
+          tourId: "nav-requirements",
         },
       ]
       : []),
@@ -78,6 +89,7 @@ const MentorLayout = ({ children }) => {
       path: "/mentor/calendar",
       nameKey: "nav_calendar",
       icon: <Calendar size={20} />,
+      tourId: "nav-calendar",
     },
   ];
 
@@ -128,6 +140,7 @@ const MentorLayout = ({ children }) => {
                     key={item.path}
                     to={item.path}
                     onClick={(e) => handleNavClick(e, item)}
+                    data-tour={item.tourId}
                     className={`
                       relative flex items-center gap-3 px-4 py-3 rounded-xl
                       transition-all duration-300
@@ -213,6 +226,11 @@ const MentorLayout = ({ children }) => {
 
       {/* ================= QUOTA MODAL (OVERLAY) ================= */}
       <QuotaLimitModal isOpen={showQuotaModal} onClose={() => setShowQuotaModal(false)} quotaDetails={quotaDetails} />
+
+      {/* GuideBot Launcher — one shared instance for both desktop and mobile */}
+      <div className="fixed bottom-6 right-6 z-40">
+        <GuideBotLauncher tourId="mentor-overview-v1" />
+      </div>
     </div>
   );
 };

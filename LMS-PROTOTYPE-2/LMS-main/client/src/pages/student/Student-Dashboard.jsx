@@ -243,7 +243,7 @@ const StudentDashboard = () => {
               <h1 className="responsive-text-2xl font-bold">Dashboard</h1>
               <p className="text-gray-500 responsive-text-sm">Welcome back</p>
             </div>
-            <AnnouncementBell />
+            <div data-tour="announcement-bell"><AnnouncementBell /></div>
           </div>
 
           {/* WELCOME BANNER */}
@@ -274,7 +274,7 @@ const StudentDashboard = () => {
           </div>
 
           {/* STATS */}
-          <div className="dashboard-grid">
+          <div data-tour="stats-grid" className="dashboard-grid">
             <div className="responsive-card animate-fade-in hover:scale-105 transition-all duration-300">
               <div className="responsive-card-content">
                 <div className="flex items-center justify-between">
@@ -401,7 +401,7 @@ const StudentDashboard = () => {
           {/* ATTENDANCE & RESULTS QUICK VIEW */}
           <div className="grid md:grid-cols-2 gap-6">
             {/* Attendance Widget */}
-            <div className="bg-white rounded-2xl p-6 shadow hover:shadow-lg transition-shadow">
+            <div data-tour="attendance-summary" className="bg-white rounded-2xl p-6 shadow hover:shadow-lg transition-shadow">
               <div className="flex items-center justify-between mb-4">
                 <h2 className="font-bold text-lg">📊 Attendance Summary</h2>
                 <Link to="/student/attendance" className="text-blue-600 hover:text-blue-700 text-sm font-medium">
@@ -444,7 +444,7 @@ const StudentDashboard = () => {
             </div>
 
             {/* Results Widget */}
-            <div className="bg-white rounded-2xl p-6 shadow hover:shadow-lg transition-shadow">
+            <div data-tour="result-summary" className="bg-white rounded-2xl p-6 shadow hover:shadow-lg transition-shadow">
               <div className="flex items-center justify-between mb-4">
                 <h2 className="font-bold text-lg">📊 Results Summary</h2>
                 <Link to="/student/results" className="text-blue-600 hover:text-blue-700 text-sm font-medium">
@@ -504,7 +504,7 @@ const StudentDashboard = () => {
           </div>
 
           {/* COURSES */}
-          <div className="space-y-4">
+          <div data-tour="enrolled-courses" className="space-y-4">
             <h2 className="font-bold text-lg">Enrolled Courses</h2>
 
             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -512,6 +512,7 @@ const StudentDashboard = () => {
                 <Link
                   key={course._id}
                   to={`/student/course/${course._id}`}
+                  data-tour={index === 0 ? 'first-course-card' : undefined}
                   className="relative rounded-xl overflow-hidden cursor-pointer transform transition-all duration-300 hover:scale-105 hover:shadow-xl group animate-scale-in"
                   style={{
                     animationDelay: `${index * 0.1}s`,

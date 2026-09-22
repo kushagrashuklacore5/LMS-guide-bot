@@ -572,7 +572,7 @@ const CourseTeacherPortal = () => {
         </div>
 
         {/* Action Buttons */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+        <div data-tour="course-actions" className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
           <button
             onClick={() => setShowAddWeekModal(true)}
             className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-2"
@@ -603,7 +603,7 @@ const CourseTeacherPortal = () => {
         </div>
 
         {/* Tabs */}
-        <div className="flex gap-4 mb-6 border-b border-gray-200">
+        <div data-tour="course-info-tabs" className="flex gap-4 mb-6 border-b border-gray-200">
           <button
             onClick={() => setExpandedTab('materials')}
             className={`px-4 py-2 font-medium transition-colors ${
@@ -626,6 +626,7 @@ const CourseTeacherPortal = () => {
           </button>
           <button
             onClick={() => setExpandedTab('live-classes')}
+            data-tour="course-tab-live"
             className={`px-4 py-2 font-medium transition-colors ${
               expandedTab === 'live-classes'
                 ? 'border-b-2 border-blue-600 text-blue-600'
@@ -636,6 +637,7 @@ const CourseTeacherPortal = () => {
           </button>
           <button
             onClick={() => setExpandedTab('students')}
+            data-tour="course-tab-students"
             className={`px-4 py-2 font-medium transition-colors ${
               expandedTab === 'students'
                 ? 'border-b-2 border-blue-600 text-blue-600'
@@ -779,8 +781,8 @@ const CourseTeacherPortal = () => {
               </div>
             ) : (
               <div className="grid gap-4">
-                {liveClasses.map((liveClass) => (
-                  <div key={liveClass._id} className="bg-white border border-gray-200 rounded-lg p-6 shadow-sm">
+                {liveClasses.map((liveClass, liveIndex) => (
+                  <div key={liveClass._id} data-tour={liveIndex === 0 ? 'course-live-class-block' : undefined} className="bg-white border border-gray-200 rounded-lg p-6 shadow-sm">
                     <div className="flex justify-between items-start mb-4">
                       <div className="flex-1">
                         <h4 className="text-lg font-semibold text-gray-900 mb-2">{liveClass.title}</h4>
@@ -852,7 +854,7 @@ const CourseTeacherPortal = () => {
         )}
 
         {expandedTab === 'students' && (
-          <div className="space-y-4">
+          <div data-tour="course-student-progress" className="space-y-4">
             {students.length === 0 ? (
               <p className="text-gray-500 text-center py-8">No students assigned to this course</p>
             ) : (

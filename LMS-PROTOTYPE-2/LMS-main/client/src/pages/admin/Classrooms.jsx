@@ -116,6 +116,7 @@ const Classrooms = () => {
           {/* ✅ ONLY CREATE CLASSROOM */}
           <button
             onClick={() => setOpenModal(true)}
+            data-tour="btn-create-classroom"
             className="flex items-center gap-2 bg-primary text-white px-4 py-2 rounded-lg"
           >
             <Plus size={18} />

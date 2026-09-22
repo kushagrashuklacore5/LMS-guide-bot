@@ -89,6 +89,12 @@ const CreateEventModal = ({ role, onClose, onSuccess }) => {
       );
       console.log(`✅ Calendar event created:`, res.data);
 
+      // Observed by GuideBot (ActionGuard) only — fires strictly after the
+      // create request has succeeded.
+      window.dispatchEvent(
+        new CustomEvent('guidebot:action-success', { detail: { actionId: 'calendar-event-created' } })
+      );
+
       onSuccess(); // refresh calendar
       onClose();   // close modal
     } catch (error) {
@@ -104,7 +110,7 @@ const CreateEventModal = ({ role, onClose, onSuccess }) => {
 
   return (
     <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center">
-      <div className="bg-white rounded-lg w-full max-w-lg p-6">
+      <div data-tour="calendar-create-event-modal" className="bg-white rounded-lg w-full max-w-lg p-6">
         <h2 className="text-xl font-bold mb-4">Create Calendar Event</h2>
 
         <form onSubmit={handleSubmit} className="space-y-4">

@@ -290,7 +290,7 @@ const AttendanceManagement = () => {
         </div>
 
         {/* Controls */}
-        <div className="bg-white border border-gray-200 rounded-lg p-6 mb-6">
+        <div data-tour="attendance-controls" className="bg-white border border-gray-200 rounded-lg p-6 mb-6">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -327,7 +327,7 @@ const AttendanceManagement = () => {
 
         {/* Attendance Table */}
         {selectedClassroom && students.length > 0 ? (
-          <div className="bg-white border border-gray-200 rounded-lg overflow-hidden">
+          <div data-tour="attendance-table" className="bg-white border border-gray-200 rounded-lg overflow-hidden">
             <table className="w-full">
               <thead>
                 <tr className="bg-gray-50 border-b border-gray-200">
@@ -348,7 +348,7 @@ const AttendanceManagement = () => {
                       <td className="px-6 py-3 text-sm text-gray-600">{index + 1}</td>
                       <td className="px-6 py-3 text-sm font-medium text-gray-900">{student.name}</td>
                       <td className="px-6 py-3 text-sm text-gray-600">{student.email}</td>
-                      <td className="px-6 py-3 text-center">
+                      <td data-tour={index === 0 ? 'attendance-present-absent' : undefined} className="px-6 py-3 text-center">
                         <div className="flex justify-center gap-3">
                           <label className="flex items-center gap-2 cursor-pointer">
                             <input
@@ -390,7 +390,7 @@ const AttendanceManagement = () => {
 
         {/* Summary */}
         {selectedClassroom && students.length > 0 && (
-          <div className="mt-6 grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div data-tour="mentor-attendance-summary" className="mt-6 grid grid-cols-1 md:grid-cols-3 gap-4">
             <div className="bg-green-50 border border-green-200 rounded-lg p-4">
               <p className="text-sm text-gray-600 mb-1">Present Today</p>
               <p className="text-2xl font-bold text-green-600">

@@ -171,6 +171,8 @@ const ClassroomDetail = () => {
         studentIds: [],
       });
       toast.success("Course created successfully!");
+      // Observed by GuideBot (ActionGuard) only — fires strictly after the request succeeded.
+      window.dispatchEvent(new CustomEvent('guidebot:action-success', { detail: { actionId: 'course-created' } }));
     } catch (err) {
       console.error("Create course error:", err);
       toast.error(err.message || "Failed to create course");
@@ -221,6 +223,8 @@ const ClassroomDetail = () => {
 
       setShowAssignStudentsModal(false);
       toast.success("Students assigned successfully!");
+      // Observed by GuideBot (ActionGuard) only — fires strictly after the requests succeeded.
+      window.dispatchEvent(new CustomEvent('guidebot:action-success', { detail: { actionId: 'classroom-students-assigned' } }));
 
       // Refresh classroom data and students
       const classroomRes = await fetch(`${API}/classrooms/${classroomId}`, {
@@ -294,7 +298,7 @@ const ClassroomDetail = () => {
         </div>
 
         {/* Enhanced Quick Actions Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-10">
+        <div data-tour="classroom-quick-actions" className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-10">
           {/* Create Course */}
           <button
             onClick={() => setShowCreateCourseModal(true)}
@@ -368,6 +372,7 @@ const ClassroomDetail = () => {
               <p className="text-gray-600 text-sm">Total: <span className="font-bold text-blue-600">{courses.length}</span> courses</p>
             </div>
             <button
+              data-tour="classroom-create-course-btn"
               onClick={() => setShowCreateCourseModal(true)}
               className="px-5 py-3 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-lg hover:shadow-lg transition flex items-center gap-2 font-semibold"
             >
@@ -448,6 +453,7 @@ const ClassroomDetail = () => {
               <p className="text-gray-600 text-sm">Total: <span className="font-bold text-green-600">{students.length}</span> students assigned</p>
             </div>
             <button
+              data-tour="classroom-assign-students-btn"
               onClick={() => setShowAssignStudentsModal(true)}
               className="px-5 py-3 bg-gradient-to-r from-green-500 to-green-600 text-white rounded-lg hover:shadow-md transition flex items-center gap-2 font-semibold"
             >
@@ -525,7 +531,7 @@ const ClassroomDetail = () => {
       {/* Create Course Modal */}
       {showCreateCourseModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-xl max-w-lg w-full shadow-2xl overflow-hidden">
+          <div data-tour="classroom-create-course-form" className="bg-white rounded-xl max-w-lg w-full shadow-2xl overflow-hidden">
             <div className="flex justify-between items-center p-6 border-b-2 border-blue-100 bg-gradient-to-r from-blue-500 to-indigo-600">
               <h2 className="text-2xl font-bold text-white">📖 Create New Course</h2>
               <button
@@ -692,7 +698,7 @@ const ClassroomDetail = () => {
       {/* Assign Students Modal */}
       {showAssignStudentsModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-xl max-w-lg w-full shadow-2xl overflow-hidden">
+          <div data-tour="classroom-assign-form" className="bg-white rounded-xl max-w-lg w-full shadow-2xl overflow-hidden">
             <div className="flex justify-between items-center p-6 border-b-2 border-green-100 bg-gradient-to-r from-green-500 to-emerald-600">
               <h2 className="text-2xl font-bold text-white">👥 Assign Students</h2>
               <button
